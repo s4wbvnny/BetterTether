@@ -19,6 +19,7 @@ var knownAndroidVIDs = []uint16{
 	0x0fce, // Sony Ericsson
 	0x05c6, // Qualcomm
 	0x12d1, // Huawei
+	0x339b, // Honor
 	0x2b0e, // Nothing
 	0x17ef, // Lenovo / Motorola
 	0x22b8, // Motorola
