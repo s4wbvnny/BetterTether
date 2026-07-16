@@ -1,4 +1,4 @@
-# BetterTether — Version 0.8.6
+# BetterTether — Version 0.8.9
 
 One entry per git push. Semantic versioning (MAJOR.MINOR.PATCH).
 - PATCH: bug fix, refactor, docs
@@ -9,6 +9,10 @@ Pre-release: all versions are v0.x.x until `brew install bettertether` works end
 v1.0.0 = MVP complete and working on M1/M2/M3.
 
 ---
+
+## v0.8.9 — 2026-07-16
+- Add Honor VID (0x339b) to known Android RNDIS device list
+- Clean repository history — only s4wbvnny and FlossyFish12 as contributors
 
 ## v0.8.8 — 2026-07-07
 - Milestone: Renamed project to BetterTether with full macOS .app + .pkg installer
