@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: -apple-system, Helvetica, Arial, sans-serif;
+            font-size: 11px;
+            color: #1d1d1f;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        pre {
+            background: #f5f5f7;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Installation Complete</h1>
+    <p>BetterTether has been successfully installed and the background service has been started.</p>
+
+    <h2>Getting Started</h2>
+    <ol>
+        <li>Connect your Android phone to your Mac via USB-C</li>
+        <li>On your phone, enable <strong>USB Tethering</strong> (Settings → Tethering → USB Tethering)</li>
+        <li>That's it! Your internet will route through the phone automatically.</li>
+    </ol>
+
+    <h2>Verify Installation</h2>
+    <pre>sudo launchctl list | grep princePal</pre>
+
+    <h2>Logs</h2>
+    <pre>tail -f /var/log/bettertether.log</pre>
+
+    <h2>Uninstall</h2>
+    <p>Run the uninstall script or manually:</p>
+    <pre>sudo launchctl bootout system /Library/LaunchDaemons/com.princePal.bettertether.plist
+sudo rm -f /Library/LaunchDaemons/com.princePal.bettertether.plist
+sudo rm -f /usr/local/bin/bettertether
+sudo rm -rf /etc/bettertether</pre>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.princePal.bettertether</string>
+  <key>ProgramArguments</key>
+  <array>
+    <!-- Default paths: Apple Silicon Homebrew. For Intel, replace /opt/homebrew with /usr/local -->
+    <string>/usr/local/bin/bettertether</string>
+    <string>--config</string>
+    <string>/etc/bettertether/bettertether.toml</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/var/log/bettertether.log</string>
+  <key>StandardErrorPath</key>
+  <string>/var/log/bettertether.log</string>
+  <key>ThrottleInterval</key>
+  <integer>5</integer>
+</dict>
+</plist>

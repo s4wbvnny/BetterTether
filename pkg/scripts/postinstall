@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# BetterTether — pkg postinstall script
+# Runs after package files are installed (as root).
+
+set -euo pipefail
+
+BINARY="/usr/local/bin/bettertether"
+LOG_FILE="/var/log/bettertether.log"
+
+# Fix binary permissions
+if [[ -f "$BINARY" ]]; then
+    chown root:wheel "$BINARY"
+    chmod 755 "$BINARY"
+fi
+
+# Create log file if missing
+touch "$LOG_FILE"
+chmod 666 "$LOG_FILE"
+
+# Ensure launchd plist has correct ownership
+PLIST="/Library/LaunchDaemons/com.princePal.bettertether.plist"
+if [[ -f "$PLIST" ]]; then
+    chown root:wheel "$PLIST"
+    chmod 644 "$PLIST"
+fi
+
+# NOTE: daemon is NOT auto-started here.
+# Run: sudo launchctl bootstrap system /Library/LaunchDaemons/com.princePal.bettertether.plist
+# Or use the BetterTether GUI app from /Applications.
+
+exit 0

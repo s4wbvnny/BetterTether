@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# BetterTether — pkg preinstall script
+# Runs before package files are installed.
+
+set -euo pipefail
+
+# 1. Architecture check
+ARCH="$(uname -m)"
+if [[ "$ARCH" != "arm64" ]]; then
+    echo "error: BetterTether requires Apple Silicon (arm64). Detected: $ARCH" >&2
+    exit 1
+fi
+
+# 2. OS version check
+OS_MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
+if [[ "$OS_MAJOR" -lt 13 ]]; then
+    echo "error: BetterTether requires macOS 13+ (Ventura). Detected: $(sw_vers -productVersion)" >&2
+    exit 1
+fi
+
+# 3. Check for libusb (required dependency)
+if ! command -v brew >/dev/null 2>&1; then
+    echo "warning: Homebrew not found. BetterTether requires libusb." >&2
+    echo "Install Homebrew from https://brew.sh then run: brew install libusb" >&2
+fi
+
+LIBUSB_OK=false
+if command -v pkg-config >/dev/null 2>&1; then
+    if pkg-config --exists libusb-1.0 2>/dev/null; then
+        LIBUSB_OK=true
+    fi
+fi
+# Fallback: check Homebrew cellar directly
+if [[ "$LIBUSB_OK" != "true" ]] && command -v brew >/dev/null 2>&1; then
+    if brew list libusb >/dev/null 2>&1; then
+        LIBUSB_OK=true
+    fi
+fi
+
+if [[ "$LIBUSB_OK" != "true" ]]; then
+    echo "warning: libusb is not installed." >&2
+    echo "Install it with: brew install libusb" >&2
+fi
+
+# 4. Stop existing daemon if running
+PLIST="/Library/LaunchDaemons/com.princePal.bettertether.plist"
+if [[ -f "$PLIST" ]]; then
+    echo "→ Stopping existing BetterTether daemon..."
+    /bin/launchctl bootout system "$PLIST" 2>/dev/null || /bin/launchctl unload "$PLIST" 2>/dev/null || true
+    /bin/rm -f "$PLIST"
+fi
+
+exit 0

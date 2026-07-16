@@ -1,0 +1,22 @@
+# Binary output
+/build/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# MacOS files
+.DS_Store
+
+# Go specific
+/vendor/
+*.test
+*.prof
+
+# Logs
+*.log
+
+# Scratch
+tmp/

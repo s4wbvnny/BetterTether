@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Build and Release (Apple Silicon)
+    runs-on: macos-14
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install dependencies (libusb + pkg-config)
+        run: brew install libusb pkg-config
+
+      - name: Run tests
+        run: go test -race ./...
+
+      - name: Build .pkg installer (includes daemon + GUI .app)
+        run: make pkg
+
+      - name: Package signed binary tarball
+        run: |
+          mkdir -p build
+          GOARCH=arm64 GOOS=darwin CGO_ENABLED=1 \
+            go build -ldflags="-X main.version=${{ github.ref_name }}" \
+            -o build/bettertether ./cmd/bettertether
+          cd build && cp bettertether bettertether-darwin-arm64 && \
+            tar czf bettertether-darwin-arm64.tar.gz bettertether-darwin-arm64
+          rm -f bettertether-darwin-arm64
+          shasum -a 256 bettertether-darwin-arm64.tar.gz > bettertether-darwin-arm64.tar.gz.sha256
+
+      - name: Archive source code
+        run: |
+          git archive --format=zip -o build/BetterTether-${{ github.ref_name }}.zip HEAD
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/BetterTether-*.pkg
+            build/bettertether-darwin-arm64.tar.gz
+            build/bettertether-darwin-arm64.tar.gz.sha256
+            build/BetterTether-*.zip
+          generate_release_notes: true

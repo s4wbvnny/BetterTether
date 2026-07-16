@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>BetterTether</title>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+    <options customize="never" require-scripts="true" hostArchitectures="arm64"/>
+    <volume-check>
+        <allowed-os-versions>
+            <os-version min="13.0"/>
+        </allowed-os-versions>
+    </volume-check>
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    <choices-outline>
+        <line choice="daemon"/>
+        <line choice="gui"/>
+    </choices-outline>
+    <choice id="daemon" title="BetterTether Daemon" description="Core USB tethering daemon and launchd service">
+        <pkg-ref id="com.princePal.bettertether"/>
+    </choice>
+    <choice id="gui" title="BetterTether GUI" description="Menu-bar app with on/off toggle (appears in Dock)">
+        <pkg-ref id="com.princePal.bettertether-ui"/>
+    </choice>
+    <pkg-ref id="com.princePal.bettertether" installKBytes="5000" version="0.8.7" auth="Root">#bettertether-daemon.pkg</pkg-ref>
+    <pkg-ref id="com.princePal.bettertether-ui" installKBytes="5000" version="0.8.7" auth="Root">#bettertether-ui.pkg</pkg-ref>
+    <distribution-version>2</distribution-version>
+    <required>
+        <file>file:///usr/local/bin</file>
+    </required>
+</installer-gui-script>
