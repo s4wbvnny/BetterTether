@@ -53,8 +53,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement via direct message to:
-- **LinkedIn**: [Prince Pal](https://www.linkedin.com/in/theprincepal/)
-- **Reddit**: [@PrincePal_](https://www.reddit.com/user/PrincePal_/)
+- **LinkedIn**: [Thomas Bugyei](https://www.linkedin.com/in/thomasbugyei/)
 
 All complaints will be reviewed and investigated promptly and fairly.
 
