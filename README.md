@@ -13,7 +13,7 @@ BetterTether is a lightweight userspace daemon that brings high-performance USB 
 ## Why BetterTether?
 
 - **Zero System Security Changes**: Unlike HoRNDIS, BetterTether runs entirely in userspace. You don't need to disable System Integrity Protection (SIP) or allow reduced security mode.
-- **Apple Silicon Native**: Built from the ground up for M1, M2, M3, and M4 Macs.
+- **Apple Silicon Native**: Built from the ground up for M1, M2, M3, M4 and M5 Macs.
 - **Samsung Friendly**: Includes a specialized workaround for Samsung's dynamic MAC address randomization on tethering interfaces.
 - **Plug & Play**: Automatically detects your phone, performs the handshake, and configures your Mac's routing/DNS instantly.
 
