@@ -32,7 +32,7 @@ kill_daemon() {
     sleep 0.5
   fi
   # Also unload launchd if loaded
-  sudo launchctl unload /Library/LaunchDaemons/com.princePal.bettertether.plist 2>/dev/null || true
+  sudo launchctl unload /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist 2>/dev/null || true
 }
 
 build() {

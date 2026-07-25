@@ -24,7 +24,7 @@ var (
 	toggleItem *systray.MenuItem
 )
 
-const plistPath = "/Library/LaunchDaemons/com.princePal.bettertether.plist"
+const plistPath = "/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
 
 func main() {
 	systray.Run(onReady, onExit)
@@ -79,7 +79,7 @@ func pollDaemon() {
 }
 
 func isRunning() bool {
-	out, err := exec.Command("launchctl", "print", "system/com.princePal.bettertether").CombinedOutput()
+	out, err := exec.Command("launchctl", "print", "system/com.s4wbvnny.bettertether").CombinedOutput()
 	if err != nil {
 		return false
 	}

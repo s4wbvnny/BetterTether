@@ -146,11 +146,11 @@ launchctl list | grep bettertether
 tail -f /var/log/bettertether.log
 
 # Manual start/stop (during development)
-sudo launchctl load /Library/LaunchDaemons/com.princePal.bettertether.plist
-sudo launchctl unload /Library/LaunchDaemons/com.princePal.bettertether.plist
+sudo launchctl load /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
+sudo launchctl unload /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
 
 # Force restart
-sudo launchctl kickstart -k system/com.princePal.bettertether
+sudo launchctl kickstart -k system/com.s4wbvnny.bettertether
 ```
 
 ---

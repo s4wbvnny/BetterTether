@@ -5,7 +5,7 @@ set -euo pipefail
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
 BINARY_NAME="bettertether"
 APP_NAME="BetterTether"
-PLIST="com.princePal.bettertether.plist"
+PLIST="com.s4wbvnny.bettertether.plist"
 PLIST_SRC="$SELF_DIR/launchd/$PLIST"
 PLIST_DST="/Library/LaunchDaemons/$PLIST"
 BINARY_DST="/usr/local/bin/$BINARY_NAME"

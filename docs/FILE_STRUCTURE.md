@@ -82,7 +82,7 @@ BetterTether/
 │   └── dev-reload.sh                # Kill daemon → rebuild → restart (hot-reload for dev)
 │
 ├── launchd/
-│   └── com.princePal.bettertether.plist  # launchd daemon config (auto-start, crash restart)
+│   └── com.s4wbvnny.bettertether.plist  # launchd daemon config (auto-start, crash restart)
 │
 ├── test/
 │   ├── fixtures/

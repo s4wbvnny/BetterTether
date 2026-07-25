@@ -88,7 +88,7 @@ Format:
 ### 2026-03-28 19:12 — 📦 One-Line Installer and CLI Improvements
 - What: Created `install.sh` and `uninstall.sh` for `curl | bash` setup; added `--config` flag to `main.go`; standardized `launchd` path to `/usr/local/bin` and `/etc/bettertether`.
 - Why: Transition from a "developer-only" build tool to a consumer-ready utility with frictionless setup/teardown.
-- Files: `install.sh`, `uninstall.sh`, `cmd/bettertether/main.go`, `launchd/com.princePal.bettertether.plist`, `README.md`
+- Files: `install.sh`, `uninstall.sh`, `cmd/bettertether/main.go`, `launchd/com.s4wbvnny.bettertether.plist`, `README.md`
 - Breaking: yes (standardized system paths) 🚀
 
 ## v0.7.0 — 2026-03-28

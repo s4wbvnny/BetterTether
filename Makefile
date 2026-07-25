@@ -78,7 +78,7 @@ daemon-status:
 	launchctl list | grep bettertether || echo "bettertether daemon not running"
 
 daemon-restart:
-	sudo launchctl kickstart -k system/com.princePal.bettertether
+	sudo launchctl kickstart -k system/com.s4wbvnny.bettertether
 
 # ──────────────────────────────────────────────
 # Code Quality
@@ -148,6 +148,7 @@ app: build-ui
 # Compute once: scripts prints e.g. "1.0.3" from VERSIONS.md
 PKG_VERSION   = $(shell sh scripts/version.sh)
 PKG_ROOT      = $(BUILD_DIR)/pkgroot
+PKG_UI_ROOT   = $(BUILD_DIR)/pkgroot-ui
 PKG_SCRIPTS   = pkg/scripts
 PKG_RESOURCES = pkg/Resources
 PKG_OUTPUT    = $(BUILD_DIR)/BetterTether-$(PKG_VERSION).pkg
@@ -162,27 +163,36 @@ pkgroot: build
 	mkdir -p $(PKG_ROOT)/etc/bettertether
 	mkdir -p $(PKG_ROOT)/var/log
 	cp $(BUILD_DIR)/$(BINARY) $(PKG_ROOT)/usr/local/bin/$(BINARY)
-	cp launchd/com.princePal.bettertether.plist $(PKG_ROOT)/Library/LaunchDaemons/com.princePal.bettertether.plist
+	cp launchd/com.s4wbvnny.bettertether.plist $(PKG_ROOT)/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
 	cp config/default.toml $(PKG_ROOT)/etc/bettertether/bettertether.toml
 	touch $(PKG_ROOT)/var/log/.bettertether-placeholder
 	@echo "✓ Daemon package root ready at $(PKG_ROOT)"
 
+# Build the staging directory for the GUI .app component
+.PHONY: pkgroot-ui
+pkgroot-ui: app
+	@echo "→ Preparing GUI package root..."
+	rm -rf $(PKG_UI_ROOT)
+	mkdir -p $(PKG_UI_ROOT)/Applications
+	cp -R $(UI_APP_DIR) $(PKG_UI_ROOT)/Applications/
+	@echo "✓ GUI package root ready at $(PKG_UI_ROOT)"
+
 # Build unsigned .pkg (suitable for local/CI use)
 .PHONY: pkg
-pkg: pkgroot app
+pkg: pkgroot pkgroot-ui
 	@echo "→ Building BetterTether-$(PKG_VERSION).pkg..."
 	# 1. Daemon component (binary + plist + config)
 	pkgbuild --root $(PKG_ROOT) \
 		--scripts $(PKG_SCRIPTS) \
-		--identifier com.princePal.bettertether \
+		--identifier com.s4wbvnny.bettertether \
 		--version $(PKG_VERSION) \
 		--install-location / \
 		$(BUILD_DIR)/bettertether-daemon.pkg
-	# 2. GUI app component (uses --component so it lands in /Applications properly)
-	pkgbuild --component $(UI_APP_DIR) \
-		--identifier com.princePal.bettertether-ui \
+	# 2. GUI app component (uses --root so the .app lands reliably in /Applications)
+	pkgbuild --root $(PKG_UI_ROOT) \
+		--identifier com.s4wbvnny.bettertether-ui \
 		--version $(PKG_VERSION) \
-		--install-location /Applications \
+		--install-location / \
 		$(BUILD_DIR)/bettertether-ui.pkg
 	# 3. Combine into a distribution package
 	productbuild --distribution pkg/Distribution.xml \
@@ -192,27 +202,28 @@ pkg: pkgroot app
 	rm -f $(BUILD_DIR)/bettertether-daemon.pkg
 	rm -f $(BUILD_DIR)/bettertether-ui.pkg
 	rm -rf $(PKG_ROOT)
+	rm -rf $(PKG_UI_ROOT)
 	@echo "✓ Package built: $(PKG_OUTPUT)"
 	@echo "  Install with: open $(PKG_OUTPUT)"
 
 # Build developer-ID signed .pkg (for distribution)
 .PHONY: pkg-signed
-pkg-signed: build app
+pkg-signed: pkgroot pkgroot-ui
 	@read -p "Apple Developer ID (e.g. 'Developer ID Installer: Name (TEAM)'): " SIGN_ID; \
 	echo "→ Signing daemon component..."; \
 	pkgbuild --root $(PKG_ROOT) \
 		--scripts $(PKG_SCRIPTS) \
-		--identifier com.princePal.bettertether \
+		--identifier com.s4wbvnny.bettertether \
 		--version $(PKG_VERSION) \
 		--sign "$$SIGN_ID" \
 		--install-location / \
 		$(BUILD_DIR)/bettertether-daemon.pkg; \
 	echo "→ Signing GUI component..."; \
-	pkgbuild --component $(UI_APP_DIR) \
-		--identifier com.princePal.bettertether-ui \
+	pkgbuild --root $(PKG_UI_ROOT) \
+		--identifier com.s4wbvnny.bettertether-ui \
 		--version $(PKG_VERSION) \
 		--sign "$$SIGN_ID" \
-		--install-location /Applications \
+		--install-location / \
 		$(BUILD_DIR)/bettertether-ui.pkg; \
 	echo "→ Building signed distribution package..."; \
 	productbuild --distribution pkg/Distribution.xml \
@@ -223,6 +234,7 @@ pkg-signed: build app
 	rm -f $(BUILD_DIR)/bettertether-daemon.pkg; \
 	rm -f $(BUILD_DIR)/bettertether-ui.pkg; \
 	rm -rf $(PKG_ROOT); \
+	rm -rf $(PKG_UI_ROOT); \
 	echo "✓ Signed package built: $(PKG_OUTPUT)"
 
 # Notarize the signed .pkg (requires Apple ID + app-specific password)

@@ -43,7 +43,7 @@ if [[ "$LIBUSB_OK" != "true" ]]; then
 fi
 
 # 4. Stop existing daemon if running
-PLIST="/Library/LaunchDaemons/com.princePal.bettertether.plist"
+PLIST="/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
 if [[ -f "$PLIST" ]]; then
     echo "→ Stopping existing BetterTether daemon..."
     /bin/launchctl bootout system "$PLIST" 2>/dev/null || /bin/launchctl unload "$PLIST" 2>/dev/null || true

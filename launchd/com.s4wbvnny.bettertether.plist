@@ -4,7 +4,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.princePal.bettertether</string>
+  <string>com.s4wbvnny.bettertether</string>
   <key>ProgramArguments</key>
   <array>
     <!-- Default paths: Apple Silicon Homebrew. For Intel, replace /opt/homebrew with /usr/local -->

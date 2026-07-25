@@ -18,14 +18,14 @@ touch "$LOG_FILE"
 chmod 666 "$LOG_FILE"
 
 # Ensure launchd plist has correct ownership
-PLIST="/Library/LaunchDaemons/com.princePal.bettertether.plist"
+PLIST="/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
 if [[ -f "$PLIST" ]]; then
     chown root:wheel "$PLIST"
     chmod 644 "$PLIST"
 fi
 
 # NOTE: daemon is NOT auto-started here.
-# Run: sudo launchctl bootstrap system /Library/LaunchDaemons/com.princePal.bettertether.plist
+# Run: sudo launchctl bootstrap system /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
 # Or use the BetterTether GUI app from /Applications.
 
 exit 0

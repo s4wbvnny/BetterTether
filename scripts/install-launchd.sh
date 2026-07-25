@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-PLIST_NAME="com.princePal.bettertether.plist"
+PLIST_NAME="com.s4wbvnny.bettertether.plist"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SRC_PLIST="$REPO_ROOT/launchd/$PLIST_NAME"

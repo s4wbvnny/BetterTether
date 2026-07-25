@@ -32,14 +32,14 @@ class BetterTether < Formula
   
       # Install launchd plist (will be loaded in post_install)
       (prefix/"launchd").mkpath
-      (prefix/"launchd/com.princePal.bettertether.plist").write(plist_content)
+      (prefix/"launchd/com.s4wbvnny.bettertether.plist").write(plist_content)
     end
   
     def post_install
       # Copy plist to LaunchDaemons and load it
-      system "sudo", "cp", "#{prefix}/launchd/com.princePal.bettertether.plist",
-             "/Library/LaunchDaemons/com.princePal.bettertether.plist"
-      system "sudo", "launchctl", "load", "/Library/LaunchDaemons/com.princePal.bettertether.plist"
+      system "sudo", "cp", "#{prefix}/launchd/com.s4wbvnny.bettertether.plist",
+             "/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
+      system "sudo", "launchctl", "load", "/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
     end
   
     def caveats
@@ -58,8 +58,8 @@ class BetterTether < Formula
           #{etc}/bettertether/bettertether.toml
   
         To stop/start the daemon:
-          sudo launchctl unload /Library/LaunchDaemons/com.princePal.bettertether.plist
-          sudo launchctl load /Library/LaunchDaemons/com.princePal.bettertether.plist
+          sudo launchctl unload /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
+          sudo launchctl load /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
   
         GitHub: https://github.com/s4wbvnny/bettertether
       EOS
@@ -67,8 +67,8 @@ class BetterTether < Formula
   
     # Called by `brew uninstall`
     def uninstall_preflight
-      system "sudo", "launchctl", "unload", "/Library/LaunchDaemons/com.princePal.bettertether.plist"
-      system "sudo", "rm", "-f", "/Library/LaunchDaemons/com.princePal.bettertether.plist"
+      system "sudo", "launchctl", "unload", "/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
+      system "sudo", "rm", "-f", "/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
     end
   
     test do
@@ -86,7 +86,7 @@ class BetterTether < Formula
         <plist version="1.0">
         <dict>
           <key>Label</key>
-          <string>com.princePal.bettertether</string>
+          <string>com.s4wbvnny.bettertether</string>
           <key>ProgramArguments</key>
           <array>
             <string>#{opt_bin}/bettertether</string>

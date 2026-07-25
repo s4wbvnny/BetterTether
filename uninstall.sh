@@ -4,12 +4,12 @@ set -euo pipefail
 
 BINARY_DST="/usr/local/bin/bettertether"
 APP_DST="/Applications/BetterTether.app"
-PLIST_DST="/Library/LaunchDaemons/com.princePal.bettertether.plist"
+PLIST_DST="/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
 CONFIG_DIR="/etc/bettertether"
 LOG_FILE="/var/log/bettertether.log"
 
 echo "→ Stopping daemon (system domain)..."
-/bin/launchctl bootout system/com.princePal.bettertether 2>/dev/null || true
+/bin/launchctl bootout system/com.s4wbvnny.bettertether 2>/dev/null || true
 /bin/launchctl bootout system "$PLIST_DST" 2>/dev/null || true
 
 echo "→ Killing any running bettertether process..."

@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-PLIST_NAME="com.princePal.bettertether.plist"
+PLIST_NAME="com.s4wbvnny.bettertether.plist"
 DEST="/Library/LaunchDaemons/$PLIST_NAME"
 
 if [[ -f "$DEST" ]]; then
