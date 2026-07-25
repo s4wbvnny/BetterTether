@@ -1,14 +1,19 @@
-# BetterTether — Version 0.8.9
+# BetterTether — Version 0.8.10
 
 One entry per git push. Semantic versioning (MAJOR.MINOR.PATCH).
 - PATCH: bug fix, refactor, docs
 - MINOR: new feature, new package
-- MAJOR: breaking API or behavior change (v1+ only)
+- MAJOR: breaking API or change (v1+ only)
 
 Pre-release: all versions are v0.x.x until `brew install bettertether` works end-to-end.
 v1.0.0 = MVP complete and working on M1/M2/M3.
 
 ---
+
+## v0.8.10 — 2026-07-25
+- Fix `.pkg` installer silently failing to place `BetterTether.app` in `/Applications/`
+- Rename `com.princePal.*` identifiers to `com.s4wbvnny.*` throughout
+- Switch GUI component build from `pkgbuild --component` to `--root` to bypass macOS Installer `<relocate>` bug
 
 ## v0.8.9 — 2026-07-16
 - Add Honor VID (0x339b) to known Android RNDIS device list
