@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# BetterTether — Install CLI daemon + GUI .app to the system.
+# BetterTether — Install daemon + GUI .app to the system.
 set -euo pipefail
 
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -15,11 +15,17 @@ CONFIG_DIR="/etc/bettertether"
 CONFIG_DST="$CONFIG_DIR/bettertether.toml"
 LOG_FILE="/var/log/bettertether.log"
 
+# Check prerequisites
+if ! command -v node &>/dev/null; then
+  echo "Error: Node.js is required. Install with: brew install node"
+  exit 1
+fi
+
 # --- Build ---
 echo "→ Building daemon..."
 make -C "$SELF_DIR" build
 
-echo "→ Building GUI app..."
+echo "→ Building GUI app (this may take a while)..."
 make -C "$SELF_DIR" app
 
 # --- Install daemon binary ---
@@ -64,8 +70,8 @@ fi
 
 echo ""
 echo "✓ BetterTether installed!"
-echo "  CLI:   $BINARY_DST"
-echo "  GUI:   $APP_DST"
-echo "  Logs:  $LOG_FILE"
+echo "  GUI:  $APP_DST"
+echo "  Logs: $LOG_FILE"
 echo ""
-echo "To uninstall: sudo bash uninstall.sh"
+echo "Launch BetterTether.app from your Applications folder."
+echo "To uninstall: drag BetterTether.app to Trash, or run: sudo bash uninstall.sh"

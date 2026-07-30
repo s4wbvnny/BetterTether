@@ -21,11 +21,6 @@ build:
 		-o $(BUILD_DIR)/$(BINARY) $(CMD)
 	@echo "✓ Built: $(BUILD_DIR)/$(BINARY)"
 
-build-intel:
-	@echo "→ Building $(BINARY) for darwin/amd64..."
-	GOARCH=amd64 GOOS=darwin CGO_ENABLED=1 \
-		go build -o $(BUILD_DIR)/$(BINARY)-amd64 $(CMD)
-
 clean:
 	rm -rf $(BUILD_DIR)/
 	@echo "✓ Cleaned"
@@ -109,36 +104,39 @@ version:
 	@cat VERSIONS.md | grep '^## v' | head -1 | awk '{print $$2}'
 
 # ──────────────────────────────────────────────
-# Menu Bar App (.app)
+# Electron GUI App (.app)
 # ──────────────────────────────────────────────
 
 UI_APP_NAME  = BetterTether
-UI_BINARY    = bettertether-ui
-UI_SRC       = ./cmd/bettertether-ui
 UI_APP_DIR   = $(BUILD_DIR)/$(UI_APP_NAME).app
-UI_ICON_SRC    = BetterTether.icns
 
-# Generate the shield icon PNGs, then build the menu-bar binary
-.PHONY: ui-icons
-ui-icons:
-	go run scripts/gen-icons.go
+# Install Electron GUI npm dependencies
+.PHONY: gui-deps
+gui-deps:
+	@echo "→ Installing GUI dependencies..."
+	cd gui && npm install
+	@echo "✓ GUI dependencies installed"
 
+# Stage the daemon binary + build the Electron .app bundle
 .PHONY: build-ui
-build-ui: ui-icons
-	@echo "→ Building $(UI_BINARY)..."
-	go build -o $(BUILD_DIR)/$(UI_BINARY) $(UI_SRC)
-	@echo "✓ Built: $(BUILD_DIR)/$(UI_BINARY)"
+build-ui: build
+	@echo "→ Staging daemon binary for Electron app..."
+	mkdir -p gui/resources
+	cp $(BUILD_DIR)/$(BINARY) gui/resources/bettertether
+	@echo "✓ Daemon staged at gui/resources/bettertether"
 
-# Build a macOS .app bundle for the menu-bar UI
+# Build the Electron .app bundle (requires Node.js + npm)
 .PHONY: app
-app: build-ui
-	@echo "→ Building $(UI_APP_NAME).app..."
+app: gui-deps build-ui
+	@echo "→ Building Electron $(UI_APP_NAME).app..."
+	cd gui && npx electron-vite build && npx electron-builder --mac --config electron-builder.yml
 	-rm -rf $(UI_APP_DIR) 2>/dev/null
-	mkdir -p $(UI_APP_DIR)/Contents/MacOS
-	mkdir -p $(UI_APP_DIR)/Contents/Resources
-	cp $(BUILD_DIR)/$(UI_BINARY) $(UI_APP_DIR)/Contents/MacOS/$(UI_APP_NAME)
-	cp $(UI_ICON_SRC) $(UI_APP_DIR)/Contents/Resources/BetterTether.icns
-	sed "s/VERSION/$(PKG_VERSION)/g" pkg/BetterTether-Info.plist > $(UI_APP_DIR)/Contents/Info.plist
+	# Pick the native arch .app (arm64 on Apple Silicon, x64 otherwise)
+	if [ -d "gui/dist/mac-arm64/BetterTether.app" ]; then \
+		cp -R gui/dist/mac-arm64/BetterTether.app $(UI_APP_DIR); \
+	else \
+		cp -R gui/dist/mac/BetterTether.app $(UI_APP_DIR); \
+	fi
 	@echo "✓ App bundle: $(UI_APP_DIR)"
 
 # ──────────────────────────────────────────────

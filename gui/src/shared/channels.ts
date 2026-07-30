@@ -1,0 +1,13 @@
+export const IPC = {
+  GET_STATUS: 'bt:get-status',
+  START_DAEMON: 'bt:start-daemon',
+  STOP_DAEMON: 'bt:stop-daemon',
+  POLL_STATUS: 'bt:poll-status',
+  GET_LOGS: 'bt:get-logs',
+  CLEAR_LOGS: 'bt:clear-logs',
+  POLL_LOGS: 'bt:poll-logs',
+  HIDE_WINDOW: 'bt:hide-window',
+  UNINSTALL: 'bt:uninstall',
+  GET_SETTINGS: 'bt:get-settings',
+  SET_SETTINGS: 'bt:set-settings',
+} as const

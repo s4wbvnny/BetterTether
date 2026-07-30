@@ -17,7 +17,7 @@
     <choice id="daemon" title="BetterTether Daemon" description="Core USB tethering daemon and launchd service">
         <pkg-ref id="com.s4wbvnny.bettertether"/>
     </choice>
-    <choice id="gui" title="BetterTether GUI" description="Menu-bar app with on/off toggle (appears in Dock)">
+    <choice id="gui" title="BetterTether GUI" description="Desktop app with power button, traffic stats & menu-bar icon">
         <pkg-ref id="com.s4wbvnny.bettertether-ui"/>
     </choice>
     <pkg-ref id="com.s4wbvnny.bettertether" installKBytes="5000" version="0.8.7" auth="Root">#bettertether-daemon.pkg</pkg-ref>

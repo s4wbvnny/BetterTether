@@ -20,14 +20,22 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Install dependencies (libusb + pkg-config)
-        run: brew install libusb pkg-config
+      - name: Install dependencies (libusb + pkg-config + node)
+        run: |
+          brew install libusb pkg-config node
 
       - name: Run tests
         run: go test -race ./...
 
       - name: Build .pkg installer (includes daemon + GUI .app)
         run: make pkg
+
+      - name: Build DMG installers
+        run: |
+          cd gui
+          npm install
+          npm run build
+          npx electron-builder --mac dmg --arm64 --x64
 
       - name: Package signed binary tarball
         run: |
@@ -52,4 +60,6 @@ jobs:
             build/bettertether-darwin-arm64.tar.gz
             build/bettertether-darwin-arm64.tar.gz.sha256
             build/BetterTether-*.zip
+            gui/dist/BetterTether-*-arm64.dmg
+            gui/dist/BetterTether-*-x64.dmg
           generate_release_notes: true

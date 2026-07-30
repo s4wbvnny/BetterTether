@@ -14,7 +14,15 @@ type Config struct {
 	TUN     TUNConfig     `toml:"tun"`
 	DHCP    DHCPConfig    `toml:"dhcp"`
 	Route   RouteConfig   `toml:"route"`
+	API     APIConfig     `toml:"api"`
 	Logging LoggingConfig `toml:"logging"`
+}
+
+// APIConfig controls the local HTTP API server for the GUI.
+type APIConfig struct {
+	Enabled bool   `toml:"enabled"`
+	Host    string `toml:"host"`
+	Port    int    `toml:"port"`
 }
 
 type USBConfig struct {

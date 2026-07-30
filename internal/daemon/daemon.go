@@ -3,7 +3,9 @@ package daemon
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -12,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/s4wbvnny/BetterTether/config"
+	"github.com/s4wbvnny/BetterTether/internal/api"
 	"github.com/s4wbvnny/BetterTether/internal/rndis"
 	"github.com/s4wbvnny/BetterTether/internal/tun"
 	"github.com/s4wbvnny/BetterTether/internal/usb"
@@ -19,14 +22,22 @@ import (
 
 // Daemon represents the main executing body of BetterTether.
 type Daemon struct {
-	cfg *config.Config
-	wg  sync.WaitGroup
+	cfg       *config.Config
+	wg        sync.WaitGroup
+	startTime time.Time
+
+	mu         sync.Mutex
+	activeRelay *Relay
+
+	plistPath string
 }
 
 // New creates a new Daemon with the loaded configuration.
 func New(cfg *config.Config) *Daemon {
 	return &Daemon{
-		cfg: cfg,
+		cfg:       cfg,
+		startTime: time.Now(),
+		plistPath: "/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist",
 	}
 }
 
@@ -34,6 +45,16 @@ func New(cfg *config.Config) *Daemon {
 func (d *Daemon) Run() error {
 	d.setupLogging()
 	log.Info().Msg("Starting BetterTether...")
+
+	// Start the local HTTP API server for the GUI
+	if d.cfg.API.Enabled {
+		apiSrv := api.New(d.cfg.API.Host, d.cfg.API.Port, d)
+		if err := apiSrv.Start(); err != nil {
+			log.Warn().Err(err).Msg("Failed to start API server (non-fatal)")
+		} else {
+			defer apiSrv.Stop()
+		}
+	}
 
 	// Use config polling interval, fallback to 1000ms if not set
 	pollInterval := time.Duration(d.cfg.USB.PollIntervalMS) * time.Millisecond
@@ -76,6 +97,8 @@ func (d *Daemon) Run() error {
 			time.Sleep(2 * time.Second) // prevent busy loops on retry
 			return
 		}
+		d.setActiveRelay(relay)
+		defer d.clearActiveRelay()
 
 		relay.OnDHCP = func(gateway, client string) {
 			log.Info().Str("component", "daemon").Str("gateway", gateway).Str("client", client).Msg("🔥 DHCPOFFER Intercepted! Auto-configuring network...")
@@ -151,6 +174,76 @@ func (d *Daemon) Run() error {
 	log.Info().Msg("Shutdown complete.")
 
 	return nil
+}
+
+func (d *Daemon) setActiveRelay(r *Relay) {
+	d.mu.Lock()
+	d.activeRelay = r
+	d.mu.Unlock()
+}
+
+func (d *Daemon) clearActiveRelay() {
+	d.mu.Lock()
+	d.activeRelay = nil
+	d.mu.Unlock()
+}
+
+func (d *Daemon) getRelayStats() *api.RelayStats {
+	d.mu.Lock()
+	r := d.activeRelay
+	d.mu.Unlock()
+	if r == nil {
+		return nil
+	}
+
+	r.mu.Lock()
+	sent := r.sentBytes
+	recv := r.recvBytes
+	clientIP := ""
+	if r.clientIP != nil {
+		clientIP = r.clientIP.String()
+	}
+	phoneMAC := fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", r.phoneMAC[0], r.phoneMAC[1], r.phoneMAC[2], r.phoneMAC[3], r.phoneMAC[4], r.phoneMAC[5])
+	r.mu.Unlock()
+
+	return &api.RelayStats{
+		SentBytes: sent,
+		RecvBytes: recv,
+		ClientIP:  clientIP,
+		PhoneMAC:  phoneMAC,
+	}
+}
+
+// Status implements api.StatusProvider.
+func (d *Daemon) Status() api.DaemonStatus {
+	relay := d.getRelayStats()
+	started := !d.startTime.IsZero()
+	return api.DaemonStatus{
+		Running: started,
+		Active:  relay != nil,
+		Relay:   relay,
+		Uptime:  time.Since(d.startTime).Round(time.Second).String(),
+	}
+}
+
+// StartDaemon implements api.StatusProvider.
+// Launches the launchd daemon via osascript for privilege escalation.
+func (d *Daemon) StartDaemon() error {
+	out, err := exec.Command("launchctl", "print", "system/com.s4wbvnny.bettertether").CombinedOutput()
+	if err == nil && strings.Contains(string(out), "state = running") {
+		return nil
+	}
+	cmd := exec.Command("osascript", "-e",
+		fmt.Sprintf(`do shell script "/bin/launchctl bootstrap system %s" with administrator privileges`, d.plistPath))
+	return cmd.Run()
+}
+
+// StopDaemon implements api.StatusProvider.
+// Unloads the launchd daemon via osascript for privilege escalation.
+func (d *Daemon) StopDaemon() error {
+	cmd := exec.Command("osascript", "-e",
+		fmt.Sprintf(`do shell script "/bin/launchctl bootout system %s" with administrator privileges`, d.plistPath))
+	return cmd.Run()
 }
 
 func (d *Daemon) setupLogging() {

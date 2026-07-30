@@ -10,6 +10,13 @@ v1.0.0 = MVP complete and working on M1/M2/M3.
 
 ---
 
+## v0.9.0 — 2026-07-30
+- Milestone: Electron GUI with settings panel, traffic monitor, and system tray
+- What's new: Full-featured Electron desktop app with React + TypeScript frontend. HTTP API server (port 9400) for daemon communication. Settings panel with "Keep in system tray" toggle and uninstall button. Live traffic stats (up/down speed, total data, connection status). Live log viewer. Tray icon with "Show Window" and "Quit" context menu. Trash detection — moving .app to Trash auto-runs full uninstall.
+- Daemon: New `[api]` config section enables/disables the HTTP API server. Daemon tracks relay state for API stats reporting.
+- What's fixed: Tray icon click no longer opens window (intentional — only "Show Window" from context menu). Simplified tray menu to two items.
+- Next: Homebrew tap, v1.0.0 public release.
+
 ## v0.8.10 — 2026-07-25
 - Fix `.pkg` installer silently failing to place `BetterTether.app` in `/Applications/`
 - Rename `com.princePal.*` identifiers to `com.s4wbvnny.*` throughout

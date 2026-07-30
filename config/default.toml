@@ -61,6 +61,13 @@ set_default_route = true
 route_metric = 100
 
 
+[api]
+# Local HTTP API server for the GUI
+enabled = true
+host = "127.0.0.1"
+port = 9400
+
+
 [logging]
 # Log level: debug | info | warn | error
 level = "info"

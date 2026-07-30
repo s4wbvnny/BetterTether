@@ -1,0 +1,37 @@
+{
+  "name": "bettertether-ui",
+  "version": "0.9.0",
+  "description": "BetterTether GUI - USB tethering manager for macOS",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "package": "electron-vite build && electron-builder",
+    "package:mac": "electron-vite build && electron-builder --mac",
+    "test": "vitest run"
+  },
+  "repository": "github:s4wbvnny/BetterTether",
+  "author": "BetterTether Contributors",
+  "license": "MIT",
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "electron": "^41.3.0",
+    "electron-builder": "^26.8.1",
+    "electron-vite": "^5.0.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.2",
+    "vitest": "^4.1.0"
+  },
+  "dependencies": {
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^0.577.0",
+    "clsx": "^2.1.1"
+  }
+}
