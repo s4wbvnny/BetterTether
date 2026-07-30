@@ -4,11 +4,13 @@ set -euo pipefail
 
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
 BINARY_NAME="bettertether"
+UNINSTALL_NAME="bettertether-uninstall"
 APP_NAME="BetterTether"
 PLIST="com.s4wbvnny.bettertether.plist"
 PLIST_SRC="$SELF_DIR/launchd/$PLIST"
 PLIST_DST="/Library/LaunchDaemons/$PLIST"
 BINARY_DST="/usr/local/bin/$BINARY_NAME"
+UNINSTALL_DST="/usr/local/bin/$UNINSTALL_NAME"
 APP_DST="/Applications/$APP_NAME.app"
 CONFIG_SRC="$SELF_DIR/config/default.toml"
 CONFIG_DIR="/etc/bettertether"
@@ -35,11 +37,21 @@ cp "$SELF_DIR/build/$BINARY_NAME" "$BINARY_DST"
 chown root:wheel "$BINARY_DST"
 chmod 755 "$BINARY_DST"
 
+# --- Install uninstall command ---
+echo "→ Installing uninstall command to $UNINSTALL_DST..."
+if [[ -f "$SELF_DIR/build/$UNINSTALL_NAME" ]]; then
+  cp "$SELF_DIR/build/$UNINSTALL_NAME" "$UNINSTALL_DST"
+  chown root:wheel "$UNINSTALL_DST"
+  chmod 755 "$UNINSTALL_DST"
+fi
+
 # --- Install .app ---
 echo "→ Installing GUI to $APP_DST..."
 rm -rf "$APP_DST"
 ditto "$SELF_DIR/build/$APP_NAME.app" "$APP_DST"
 chown -R root:wheel "$APP_DST"
+# Clear quarantine xattr so unsigned app launches without "damaged" error
+xattr -cr "$APP_DST" 2>/dev/null || true
 
 # --- Install launchd plist ---
 echo "→ Installing launchd plist..."

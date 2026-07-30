@@ -21,6 +21,7 @@ const POLL_INTERVAL = 1000
 const PLIST_LABEL = 'com.s4wbvnny.bettertether'
 const PLIST_PATH = '/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist'
 const DAEMON_PATH = '/usr/local/bin/bettertether'
+const UNINSTALL_PATH = '/usr/local/bin/bettertether-uninstall'
 const SETTINGS_PATH = join(app.getPath('userData'), 'settings.json')
 
 function loadSettings(): AppSettings {
@@ -49,6 +50,7 @@ function resourcePath(name: string): string {
 
 async function installDaemonFiles(): Promise<void> {
   const binaryRes = resourcePath('bettertether')
+  const uninstallRes = resourcePath('bettertether-uninstall')
   const plistRes = resourcePath('com.s4wbvnny.bettertether.plist')
   const configRes = resourcePath('default.toml')
 
@@ -66,10 +68,16 @@ async function installDaemonFiles(): Promise<void> {
     cpConfig = `&& mkdir -p /etc/bettertether && cp -f '${configRes}' /etc/bettertether/bettertether.toml`
   }
 
+  let cpUninstall = ''
+  if (existsSync(uninstallRes)) {
+    cpUninstall = `&& cp -f '${uninstallRes}' ${UNINSTALL_PATH} && chmod +x ${UNINSTALL_PATH}`
+  }
+
   const script = `do shell script "
 mkdir -p /usr/local/bin
 cp -f '${binaryRes}' ${DAEMON_PATH}
 chmod +x ${DAEMON_PATH}
+${cpUninstall}
 cp -f '${plistRes}' ${PLIST_PATH}
 chmod 644 ${PLIST_PATH}
 chown root:wheel ${PLIST_PATH}
@@ -78,7 +86,7 @@ ${cpConfig}
 
   try {
     await execFileAsync('osascript', ['-e', script], { timeout: 30_000 })
-    console.log('[install] daemon binary + plist + config installed to system paths')
+    console.log('[install] daemon binary + uninstall + plist + config installed to system paths')
   } catch (e) {
     console.error('[install] installation failed:', e)
   }
@@ -310,6 +318,7 @@ do shell script "
   sleep 1
   rm -f ${PLIST_PATH}
   rm -f ${DAEMON_PATH}
+  rm -f ${UNINSTALL_PATH}
   rm -f ${LOG_PATH}
   rm -rf /etc/bettertether
   rm -rf ~/Library/Preferences/com.s4wbvnny.bettertether-ui.plist

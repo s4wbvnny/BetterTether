@@ -111,6 +111,32 @@ The app shows real-time traffic stats (uploaded/downloaded), connection status, 
 
 ---
 
+## Uninstalling
+
+### From the App
+Open BetterTether's **Settings** panel and click **Uninstall** — removes the daemon binary, launchd plist, config, logs, and app caches. Dragging the app to Trash without uninstalling first will leave the daemon running; use Uninstall first.
+
+### Uninstall Command
+If `bettertether-uninstall` was installed alongside the daemon:
+```bash
+sudo bettertether-uninstall
+```
+
+### Manual
+```bash
+sudo bash uninstall.sh
+```
+---
+
+## Troubleshooting
+
+### "BetterTether is damaged and can't be opened"
+macOS blocks unsigned apps downloaded from the internet. Clear the quarantine attribute:
+```bash
+sudo xattr -rd com.apple.quarantine /Applications/BetterTether.app
+```
+Then relaunch BetterTether. This only needs to be done once after installing from a DMG download.
+
 ---
 
 ## Community

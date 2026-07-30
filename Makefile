@@ -1,11 +1,13 @@
 .PHONY: build test test-v test-race test-integration test-live dev clean release fmt vet lint version
 
-BINARY     = bettertether
-BUILD_DIR  = ./build
-CMD        = ./cmd/bettertether
-GOARCH     = arm64
-GOOS       = darwin
-CGO        = 1
+BINARY       = bettertether
+UNINSTALL    = bettertether-uninstall
+BUILD_DIR    = ./build
+CMD          = ./cmd/bettertether
+CMD_UNINSTALL = ./cmd/bettertether-uninstall
+GOARCH       = arm64
+GOOS         = darwin
+CGO          = 1
 
 # Suppress Apple Double (._) files during file operations
 export COPYFILE_DISABLE=1
@@ -20,9 +22,13 @@ build:
 		go build -ldflags="-X main.version=$(shell cat VERSIONS.md | grep '^## v' | head -1 | awk '{print $$2}')" \
 		-o $(BUILD_DIR)/$(BINARY) $(CMD)
 	@echo "✓ Built: $(BUILD_DIR)/$(BINARY)"
+	@echo "→ Building $(UNINSTALL)..."
+	CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(UNINSTALL) $(CMD_UNINSTALL)
+	@echo "✓ Built: $(BUILD_DIR)/$(UNINSTALL)"
 
 clean:
 	rm -rf $(BUILD_DIR)/
+	rm -f gui/resources/bettertether-uninstall
 	@echo "✓ Cleaned"
 
 # ──────────────────────────────────────────────
@@ -58,12 +64,14 @@ dev:
 install-local: build
 	@echo "→ Installing $(BINARY) to /usr/local/bin/ (requires sudo)"
 	sudo cp $(BUILD_DIR)/$(BINARY) /usr/local/bin/$(BINARY)
+	sudo cp $(BUILD_DIR)/$(UNINSTALL) /usr/local/bin/$(UNINSTALL)
 	sudo bash scripts/install-launchd.sh
 	@echo "✓ Installed and daemon started"
 
 uninstall-local:
 	sudo bash scripts/uninstall-launchd.sh
 	sudo rm -f /usr/local/bin/$(BINARY)
+	sudo rm -f /usr/local/bin/$(UNINSTALL)
 	@echo "✓ Uninstalled"
 
 logs:
@@ -123,7 +131,9 @@ build-ui: build
 	@echo "→ Staging daemon binary for Electron app..."
 	mkdir -p gui/resources
 	cp $(BUILD_DIR)/$(BINARY) gui/resources/bettertether
+	cp $(BUILD_DIR)/$(UNINSTALL) gui/resources/bettertether-uninstall
 	@echo "✓ Daemon staged at gui/resources/bettertether"
+	@echo "✓ Uninstall command staged at gui/resources/bettertether-uninstall"
 	@echo "→ Staging launchd plist + default config..."
 	cp launchd/com.s4wbvnny.bettertether.plist gui/resources/com.s4wbvnny.bettertether.plist
 	cp config/default.toml gui/resources/default.toml
@@ -134,6 +144,13 @@ build-ui: build
 app: gui-deps build-ui
 	@echo "→ Building Electron $(UI_APP_NAME).app..."
 	cd gui && npx electron-vite build && npx electron-builder --mac --config electron-builder.yml
+	# Clear quarantine xattrs from the .app bundles before packaging into DMG
+	for dir in gui/dist/mac-arm64/BetterTether.app gui/dist/mac/BetterTether.app; do \
+		if [ -d "$$dir" ]; then \
+			xattr -cr "$$dir" 2>/dev/null || true; \
+			echo "✓ Cleared xattrs: $$dir"; \
+		fi; \
+	done
 	-rm -rf $(UI_APP_DIR) 2>/dev/null
 	# Pick the native arch .app (arm64 on Apple Silicon, x64 otherwise)
 	if [ -d "gui/dist/mac-arm64/BetterTether.app" ]; then \

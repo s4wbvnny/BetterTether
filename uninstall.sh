@@ -3,6 +3,7 @@
 set -euo pipefail
 
 BINARY_DST="/usr/local/bin/bettertether"
+UNINSTALL_DST="/usr/local/bin/bettertether-uninstall"
 APP_DST="/Applications/BetterTether.app"
 PLIST_DST="/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
 CONFIG_DIR="/etc/bettertether"
@@ -17,6 +18,9 @@ pkill -9 bettertether 2>/dev/null || true
 
 echo "→ Removing daemon binary..."
 rm -f "$BINARY_DST"
+
+echo "→ Removing uninstall command..."
+rm -f "$UNINSTALL_DST"
 
 echo "→ Removing GUI app..."
 rm -rf "$APP_DST"

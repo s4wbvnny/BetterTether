@@ -28,6 +28,8 @@ tmp/
 gui/node_modules/
 gui/dist/
 gui/out/
+gui/dist_old/
+gui/out_old/
 gui/resources/bettertether
 
 # Other projects
