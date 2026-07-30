@@ -8,6 +8,9 @@ APP_DST="/Applications/BetterTether.app"
 PLIST_DST="/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
 CONFIG_DIR="/etc/bettertether"
 LOG_FILE="/var/log/bettertether.log"
+CACHE_DIR="$HOME/Library/Caches/com.s4wbvnny.bettertether-ui"
+PREFS_FILE="$HOME/Library/Preferences/com.s4wbvnny.bettertether-ui.plist"
+APP_SUPPORT_DIR="$HOME/Library/Application Support/com.s4wbvnny.bettertether-ui"
 
 echo "→ Stopping daemon (system domain)..."
 /bin/launchctl bootout system/com.s4wbvnny.bettertether 2>/dev/null || true
@@ -33,6 +36,11 @@ rm -rf "$CONFIG_DIR"
 
 echo "→ Removing log..."
 rm -f "$LOG_FILE"
+
+echo "→ Removing app caches..."
+rm -rf "$CACHE_DIR"
+rm -f "$PREFS_FILE"
+rm -rf "$APP_SUPPORT_DIR"
 
 echo ""
 echo "✓ BetterTether fully uninstalled."

@@ -54,6 +54,19 @@ export function App() {
 
         <TrafficStats relay={status.relay} />
 
+        {connected && status.relay?.clientIP && (
+          <div className="flex items-center gap-2 mt-1">
+            <svg viewBox="0 0 24 24" className="w-3 h-3 text-zinc-500" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span className="text-[11px] font-mono text-zinc-400 tracking-wider">
+              {status.relay.clientIP}
+            </span>
+          </div>
+        )}
+
       </div>
 
       <LogViewer visible={showLogs} />
