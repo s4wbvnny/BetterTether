@@ -66,6 +66,14 @@ The core routing logic is written in modern Go and consists of fewer than **2,00
 ### Option 1: Download the DMG
 Download the latest `BetterTether-*.dmg` from the [Releases](https://github.com/s4wbvnny/BetterTether/releases) page. Mount it and drag `BetterTether.app` to your Applications folder.
 
+**First launch:** Since BetterTether is downloaded from the internet, macOS Gatekeeper will block it the first time you open it. To allow it:
+1. Try to open BetterTether — you'll see *"BetterTether can't be opened"*.
+2. Go to **System Settings → Privacy & Security**.
+3. Scroll down — you'll see a message about BetterTether being blocked. Click **Open Anyway**.
+4. Enter your password when prompted.
+
+This only needs to be done once. After that, BetterTether opens normally.
+
 The app will install the background daemon on first launch (requires admin password).
 
 ### Option 2: One-Liner Install
@@ -127,12 +135,19 @@ sudo bash uninstall.sh
 
 ## Troubleshooting
 
-### "BetterTether is damaged and can't be opened"
-macOS blocks unsigned apps downloaded from the internet. Clear the quarantine attribute:
+### "BetterTether can't be opened"
+macOS Gatekeeper blocks apps downloaded from the internet that aren't signed with an Apple Developer ID. BetterTether is ad-hoc signed, so you need to approve it once:
+
+1. Go to **System Settings → Privacy & Security**.
+2. Scroll down to the **Security** section.
+3. Click **Open Anyway** next the BetterTether message.
+4. Enter your password.
+
+Alternatively, you can clear the quarantine flag from the terminal:
 ```bash
 sudo xattr -rd com.apple.quarantine /Applications/BetterTether.app
 ```
-Then relaunch BetterTether. This only needs to be done once after installing from a DMG download.
+Then relaunch BetterTether. Either method only needs to be done once after installing from a DMG download.
 
 ---
 
