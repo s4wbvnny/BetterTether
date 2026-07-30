@@ -126,4 +126,4 @@ The app shows real-time traffic stats (uploaded/downloaded), connection status, 
 |---|---|---|---|
 | Samsung Galaxy S24 | 16 (One UI 8.0) | MacBook M3 Pro | Tahoe |
 | Samsung Galaxy A55 | 16 (One UI 8.0) | MacBook M5 | Tahoe |
-| Samsung Galaxy s9 | 15 (DuhanROM 4.3) | MacBook M5 | Tahoe |
+| Samsung Galaxy s9 | 15 (DuhanROM 4.3) | MacBook M3 Pro | Tahoe |
