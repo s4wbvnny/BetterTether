@@ -6,11 +6,14 @@ exports.default = async function afterSign(context) {
   const appName = context.packager.appInfo.productFilename;
   const appBundle = path.join(appPath, `${appName}.app`);
 
-  console.log(`[after-sign] Stripping code signature from ${appBundle}`);
+  // Ad-hoc deep sign so Gatekeeper can evaluate the binary.
+  // Fully unsigned apps are hard-blocked on Sequoia even after "Open Anyway".
+  // Ad-hoc signed apps show the standard "downloaded from internet" prompt.
+  console.log(`[after-sign] Ad-hoc signing ${appBundle}`);
   try {
-    execSync(`codesign --remove-signature "${appBundle}"`, { stdio: 'inherit' });
-    console.log(`[after-sign] Code signature removed successfully`);
+    execSync(`codesign --force --deep --sign - "${appBundle}"`, { stdio: 'inherit' });
+    console.log(`[after-sign] Ad-hoc signing completed`);
   } catch (e) {
-    console.warn(`[after-sign] Warning: codesign removal failed: ${e.message}`);
+    console.warn(`[after-sign] Warning: ad-hoc signing failed: ${e.message}`);
   }
 };
