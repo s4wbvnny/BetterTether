@@ -38,7 +38,10 @@ mac:
   icon: resources/icon.icns
   category: public.app-categories.utilities
   identity: null
+  hardenedRuntime: false
   artifactName: BetterTether-${version}-${arch}.${ext}
+
+afterSign: scripts/after-sign.js
 
 dmg:
   icon: resources/icon.icns
