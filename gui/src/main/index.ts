@@ -48,7 +48,7 @@ function resourcePath(name: string): string {
     : join(__dirname, '../../resources', name)
 }
 
-async function installDaemonFiles(): Promise<void> {
+async function installAndBootstrapDaemon(): Promise<void> {
   const binaryRes = resourcePath('bettertether')
   const uninstallRes = resourcePath('bettertether-uninstall')
   const plistRes = resourcePath('com.s4wbvnny.bettertether.plist')
@@ -65,30 +65,33 @@ async function installDaemonFiles(): Promise<void> {
 
   let cpConfig = ''
   if (existsSync(configRes)) {
-    cpConfig = `&& mkdir -p /etc/bettertether && cp -f '${configRes}' /etc/bettertether/bettertether.toml`
+    cpConfig = `mkdir -p /etc/bettertether && cp -f '${configRes}' /etc/bettertether/bettertether.toml &&`
   }
 
   let cpUninstall = ''
   if (existsSync(uninstallRes)) {
-    cpUninstall = `&& cp -f '${uninstallRes}' ${UNINSTALL_PATH} && chmod +x ${UNINSTALL_PATH}`
+    cpUninstall = `cp -f '${uninstallRes}' ${UNINSTALL_PATH} && chmod +x ${UNINSTALL_PATH} &&`
   }
 
   const script = `do shell script "
+${cpConfig}
+${cpUninstall}
 mkdir -p /usr/local/bin
 cp -f '${binaryRes}' ${DAEMON_PATH}
 chmod +x ${DAEMON_PATH}
-${cpUninstall}
 cp -f '${plistRes}' ${PLIST_PATH}
 chmod 644 ${PLIST_PATH}
 chown root:wheel ${PLIST_PATH}
-${cpConfig}
+/bin/launchctl bootout system/${PLIST_LABEL} 2>/dev/null || true
+/bin/launchctl bootstrap system '${PLIST_PATH}'
 " with administrator privileges`
 
   try {
     await execFileAsync('osascript', ['-e', script], { timeout: 30_000 })
-    console.log('[install] daemon binary + uninstall + plist + config installed to system paths')
+    console.log('[install] daemon installed and bootstrapped')
   } catch (e) {
-    console.error('[install] installation failed:', e)
+    console.error('[install] installation/bootstrap failed:', e)
+    throw e
   }
 }
 
@@ -103,26 +106,20 @@ async function isDaemonRunning(): Promise<boolean> {
 
 async function toggleDaemon(start: boolean, window: BrowserWindow | null) {
   if (start) {
-    await installDaemonFiles()
-    // Stop old daemon first if already loaded
-    const already = await isDaemonRunning()
-    if (already) {
-      try {
-        await execFileAsync('osascript', ['-e', `do shell script "/bin/launchctl bootout system ${PLIST_PATH}" with administrator privileges`], { timeout: 30_000 })
-        await new Promise(r => setTimeout(r, 1500))
-      } catch (e) {
-        console.error('[daemon] bootout before bootstrap failed:', e)
-      }
+    try {
+      await installAndBootstrapDaemon()
+    } catch (e) {
+      console.error('[daemon] start failed:', e)
+    }
+  } else {
+    const script = `do shell script "/bin/launchctl bootout system ${PLIST_PATH}" with administrator privileges`
+    try {
+      await execFileAsync('osascript', ['-e', script], { timeout: 30_000 })
+    } catch (e) {
+      console.error('[daemon] stop failed:', e)
     }
   }
-  const cmd = start ? 'bootstrap' : 'bootout'
-  const script = `do shell script "/bin/launchctl ${cmd} system ${PLIST_PATH}" with administrator privileges`
-  try {
-    await execFileAsync('osascript', ['-e', script], { timeout: 30_000 })
-    await new Promise(r => setTimeout(r, 1500))
-  } catch (e) {
-    console.error('[daemon] toggle failed:', e)
-  }
+  await new Promise(r => setTimeout(r, 1500))
   const status = await fetchStatus()
   if (window && !window.isDestroyed()) window.webContents.send(IPC.POLL_STATUS, status)
 }
