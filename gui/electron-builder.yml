@@ -37,9 +37,7 @@ mac:
         - arm64
   icon: resources/icon.icns
   category: public.app-categories.utilities
-  hardenedRuntime: true
-  entitlements: resources/entitlements.mac.plist
-  entitlementsInherit: resources/entitlements.mac.plist
+  identity: null
   artifactName: BetterTether-${version}-${arch}.${ext}
 
 dmg:
