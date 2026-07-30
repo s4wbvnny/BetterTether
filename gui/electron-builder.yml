@@ -14,6 +14,10 @@ extraResources:
     to: bettertether
     filter:
       - "**/*"
+  - from: resources/com.s4wbvnny.bettertether.plist
+    to: com.s4wbvnny.bettertether.plist
+  - from: resources/default.toml
+    to: default.toml
   - from: resources/icon.icns
     to: icon.icns
   - from: resources/tray-icon.png

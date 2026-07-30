@@ -124,6 +124,10 @@ build-ui: build
 	mkdir -p gui/resources
 	cp $(BUILD_DIR)/$(BINARY) gui/resources/bettertether
 	@echo "✓ Daemon staged at gui/resources/bettertether"
+	@echo "→ Staging launchd plist + default config..."
+	cp launchd/com.s4wbvnny.bettertether.plist gui/resources/com.s4wbvnny.bettertether.plist
+	cp config/default.toml gui/resources/default.toml
+	@echo "✓ Resources staged for app bundle"
 
 # Build the Electron .app bundle (requires Node.js + npm)
 .PHONY: app

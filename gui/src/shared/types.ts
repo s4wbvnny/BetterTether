@@ -1,31 +1,26 @@
 export interface TrafficStats {
   sentBytes: number
   recvBytes: number
-  sentRate: number   // bytes/sec
-  recvRate: number   // bytes/sec
+  sentRate: number
+  recvRate: number
 }
-
-export interface SpeedTestResult {
-  latencyMs: number
-  downloadBps: number
-  uploadBps: number
-}
-
-export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error'
 
 export interface RelayStats {
   connected: boolean
-  state: ConnectionState
   phoneMAC: string
   clientIP: string
   connectedAt: string
-  traffic: TrafficStats
-  speedTest: SpeedTestResult | null
+  sentBytes: number
+  recvBytes: number
+  sentRate: number
+  recvRate: number
 }
 
 export interface DaemonStatus {
   running: boolean
+  active: boolean
   relay: RelayStats | null
+  uptime: string
 }
 
 export interface AppSettings {

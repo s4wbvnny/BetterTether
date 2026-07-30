@@ -33,6 +33,9 @@ type USBConfig struct {
 type RNDISConfig struct {
 	MaxTransferSize int `toml:"max_transfer_size"`
 	InitTimeoutMS   int `toml:"init_timeout_ms"`
+	QueryTimeoutMS  int `toml:"query_timeout_ms"`
+	SetTimeoutMS    int `toml:"set_timeout_ms"`
+	ReadBufferSize  int `toml:"read_buffer_size"`
 }
 
 type TUNConfig struct {
@@ -63,8 +66,47 @@ var DefaultConfigPaths = []string{
 	"/opt/homebrew/etc/bettertether/bettertether.toml", // ARM Homebrew
 }
 
+// DefaultConfig returns a Config populated with sensible defaults.
+func DefaultConfig() *Config {
+	return &Config{
+		API: APIConfig{
+			Enabled: true,
+			Host:    "127.0.0.1",
+			Port:    9400,
+		},
+		USB: USBConfig{
+			PollIntervalMS: 500,
+			ClaimTimeoutMS: 2000,
+		},
+		RNDIS: RNDISConfig{
+			MaxTransferSize: 16384,
+			InitTimeoutMS:   3000,
+			QueryTimeoutMS:  2000,
+			SetTimeoutMS:    2000,
+			ReadBufferSize:  65536,
+		},
+		TUN: TUNConfig{
+			InterfaceName: "bettertether",
+			MTU:           1400,
+		},
+		DHCP: DHCPConfig{
+			TimeoutMS:    5000,
+			RetryCount:   3,
+			RetryDelayMS: 1000,
+		},
+		Route: RouteConfig{
+			SetDefaultRoute: true,
+			RouteMetric:     100,
+		},
+		Logging: LoggingConfig{
+			Level:  "info",
+			Format: "text",
+		},
+	}
+}
+
 // Load reads and parses the configuration from the given path,
-// or searches default paths if path is empty. [LLM]
+// or searches default paths if path is empty, or returns DefaultConfig().
 func Load(path string) (*Config, error) {
 	if path == "" {
 		for _, p := range DefaultConfigPaths {
@@ -76,10 +118,8 @@ func Load(path string) (*Config, error) {
 	}
 
 	conf := &Config{}
-	// If still no path, we'd normally load embedded defaults,
-	// but for now we'll fail if no file is found and no path provided.
 	if path == "" {
-		return nil, fmt.Errorf("config: no config file found in default paths")
+		return DefaultConfig(), nil
 	}
 
 	if _, err := toml.DecodeFile(path, conf); err != nil {

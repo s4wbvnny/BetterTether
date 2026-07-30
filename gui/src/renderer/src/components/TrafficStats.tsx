@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import type { TrafficStats as TrafficStatsType } from '../../../shared/types'
+import type { RelayStats } from '../../../shared/types'
 
 interface Props {
-  traffic: TrafficStatsType | null
+  relay: RelayStats | null
 }
 
 function formatBytes(bytes: number): string {
@@ -14,21 +14,9 @@ function formatBytes(bytes: number): string {
   return `${val < 10 ? val.toFixed(2) : val.toFixed(1)} ${units[i]}`
 }
 
-function formatSpeed(bytesPerSec: number): string {
-  if (bytesPerSec < 1) return '—'
-  const bps = bytesPerSec * 8 // convert to bits
-  if (bps < 1000) return `${bps.toFixed(0)} bps`
-  const kbps = bps / 1000
-  if (kbps < 1000) return `${kbps.toFixed(1)} Kbps`
-  const mbps = kbps / 1000
-  return `${mbps.toFixed(1)} Mbps`
-}
-
-export function TrafficStats({ traffic }: Props) {
-  const sent = traffic?.sentBytes ?? 0
-  const recv = traffic?.recvBytes ?? 0
-  const sentRate = traffic?.sentRate ?? 0
-  const recvRate = traffic?.recvRate ?? 0
+export function TrafficStats({ relay }: Props) {
+  const sent = relay?.sentBytes ?? 0
+  const recv = relay?.recvBytes ?? 0
 
   return (
     <div className="w-full max-w-xs">
@@ -41,11 +29,10 @@ export function TrafficStats({ traffic }: Props) {
       >
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-blue-400" />
-          <span className="text-xs text-zinc-400 uppercase tracking-wider">Upload</span>
+          <span className="text-xs text-zinc-400 uppercase tracking-wider">Uploaded</span>
         </div>
         <div className="text-right">
           <AnimatedNumber value={sent} formatter={formatBytes} className="text-sm font-mono text-zinc-200" />
-          <div className="text-[10px] text-zinc-500 font-mono">{formatSpeed(sentRate)}</div>
         </div>
       </motion.div>
 
@@ -58,11 +45,10 @@ export function TrafficStats({ traffic }: Props) {
       >
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span className="text-xs text-zinc-400 uppercase tracking-wider">Download</span>
+          <span className="text-xs text-zinc-400 uppercase tracking-wider">Downloaded</span>
         </div>
         <div className="text-right">
           <AnimatedNumber value={recv} formatter={formatBytes} className="text-sm font-mono text-zinc-200" />
-          <div className="text-[10px] text-zinc-500 font-mono">{formatSpeed(recvRate)}</div>
         </div>
       </motion.div>
     </div>

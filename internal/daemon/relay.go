@@ -35,8 +35,9 @@ type Relay struct {
 	clientIP net.IP
 
 	// Traffic stats
-	sentBytes uint64
-	recvBytes uint64
+	sentBytes   uint64
+	recvBytes   uint64
+	connectedAt time.Time
 }
 
 // NewRelay creates a new bidirectional relay.
@@ -48,13 +49,14 @@ func NewRelay(ctx context.Context, dev *usb.Device, tun tun.Interface, phoneMAC 
 
 	ctx, cancel := context.WithCancel(ctx)
 	return &Relay{
-		dev:      dev,
-		tun:      tun,
-		ctx:      ctx,
-		cancel:   cancel,
-		usbIn:    in,
-		usbOut:   out,
-		phoneMAC: phoneMAC,
+		dev:         dev,
+		tun:         tun,
+		ctx:         ctx,
+		cancel:      cancel,
+		usbIn:       in,
+		usbOut:      out,
+		phoneMAC:    phoneMAC,
+		connectedAt: time.Now(),
 	}, nil
 }
 

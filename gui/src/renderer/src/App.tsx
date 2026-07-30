@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react'
 import { PowerButton } from './components/PowerButton'
 import { TrafficStats } from './components/TrafficStats'
-import { SpeedGauge } from './components/SpeedGauge'
-import { StatusCard } from './components/StatusCard'
 import { LogViewer } from './components/LogViewer'
 import { SettingsPanel } from './components/SettingsPanel'
 import type { DaemonStatus } from '../../shared/types'
 
 export function App() {
-  const [status, setStatus] = useState<DaemonStatus>({ running: false, relay: null })
+  const [status, setStatus] = useState<DaemonStatus>({ running: false, active: false, relay: null, uptime: '' })
   const [showLogs, setShowLogs] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
 
@@ -17,7 +15,7 @@ export function App() {
     return unsub
   }, [])
 
-  const connected = status.running && status.relay?.connected
+  const connected = status.active
 
   return (
     <div className="relative h-full flex flex-col">
@@ -52,19 +50,10 @@ export function App() {
 
       {/* Power button area */}
       <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
-        <PowerButton connected={connected} loading={status.running && !status.relay?.connected} />
+        <PowerButton connected={connected} loading={status.running && !status.active} stopped={!status.running} />
 
-        <TrafficStats traffic={status.relay?.traffic ?? null} />
+        <TrafficStats relay={status.relay} />
 
-        {/* Status info */}
-        {status.relay && (
-          <StatusCard relay={status.relay} />
-        )}
-
-        <SpeedGauge
-          sentRate={status.relay?.traffic?.sentRate ?? 0}
-          recvRate={status.relay?.traffic?.recvRate ?? 0}
-        />
       </div>
 
       <LogViewer visible={showLogs} />

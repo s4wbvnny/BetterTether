@@ -24,15 +24,11 @@ func main() {
 
 	fmt.Printf("bettertether v%s starting...\n", version)
 
-	// Load configuration
+	// Load configuration (falls back to embedded defaults if no file exists)
 	cfg, err := config.Load(*configPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "bettertether: config not found or unreadable, trying local default.toml...\n")
-		cfg, err = config.Load("config/default.toml")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "bettertether: failed to load any configuration: %v\n", err)
-			os.Exit(1)
-		}
+		fmt.Fprintf(os.Stderr, "bettertether: failed to load configuration: %v, using defaults\n", err)
+		cfg = config.DefaultConfig()
 	}
 
 	d := daemon.New(cfg)

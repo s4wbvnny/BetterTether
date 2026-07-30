@@ -12,12 +12,13 @@ import (
 )
 
 type RelayStats struct {
-	SentBytes   uint64 `json:"sent_bytes"`
-	RecvBytes   uint64 `json:"recv_bytes"`
-	ConnectedAt string `json:"connected_at,omitempty"`
-	ClientIP    string `json:"client_ip,omitempty"`
-	GatewayIP   string `json:"gateway_ip,omitempty"`
-	PhoneMAC    string `json:"phone_mac,omitempty"`
+	Connected   bool   `json:"connected"`
+	SentBytes   uint64 `json:"sentBytes"`
+	RecvBytes   uint64 `json:"recvBytes"`
+	ConnectedAt string `json:"connectedAt,omitempty"`
+	ClientIP    string `json:"clientIP,omitempty"`
+	GatewayIP   string `json:"gatewayIP,omitempty"`
+	PhoneMAC    string `json:"phoneMAC,omitempty"`
 }
 
 type DaemonStatus struct {

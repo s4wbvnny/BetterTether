@@ -16,7 +16,7 @@ BetterTether is a lightweight userspace daemon that brings high-performance USB 
 - **Apple Silicon Native**: Built from the ground up for M1, M2, M3, M4 and M5 Macs.
 - **Samsung Friendly**: Includes a specialized workaround for Samsung's dynamic MAC address randomization on tethering interfaces.
 - **Plug & Play**: Automatically detects your phone, performs the handshake, and configures your Mac's routing/DNS instantly.
-- **Desktop GUI**: Native macOS app with power button, traffic stats, log viewer, and system tray integration.
+- **Desktop GUI**: Native macOS app with power button, traffic stats, log viewer, settings panel (uninstall, clear logs), and system tray menu — quits cleanly without leaving the daemon running.
 
 ---
 
@@ -107,14 +107,14 @@ DMGs will be in `gui/dist/`.
 3. **Enable USB Tethering** on your phone (Settings > Tethering > USB Tethering).
 4. Click the **power button** in the app to start the daemon.
 
-The app shows real-time traffic stats, connection status, and a live log viewer.
+The app shows real-time traffic stats (uploaded/downloaded), connection status, and a live log viewer. Use the Settings panel to clear logs or fully uninstall the daemon. Quitting via Cmd+Q or the tray menu stops the daemon cleanly but keeps it installed for next time.
 
 ---
 
 ## Uninstalling
 
 ### From the App
-Open BetterTether's Settings panel and click "Uninstall", or simply drag `BetterTether.app` to the Trash — the app automatically runs the uninstall sequence to remove the daemon, logs, and preferences.
+Open BetterTether's **Settings** panel and click **Uninstall** — removes the daemon binary, launchd plist, config, logs, and app caches. Dragging the app to Trash without uninstalling first will leave the daemon running; use Uninstall first.
 
 ### Manual
 ```bash

@@ -199,6 +199,7 @@ func (d *Daemon) getRelayStats() *api.RelayStats {
 	r.mu.Lock()
 	sent := r.sentBytes
 	recv := r.recvBytes
+	ct := r.connectedAt
 	clientIP := ""
 	if r.clientIP != nil {
 		clientIP = r.clientIP.String()
@@ -207,10 +208,12 @@ func (d *Daemon) getRelayStats() *api.RelayStats {
 	r.mu.Unlock()
 
 	return &api.RelayStats{
-		SentBytes: sent,
-		RecvBytes: recv,
-		ClientIP:  clientIP,
-		PhoneMAC:  phoneMAC,
+		Connected:   true,
+		SentBytes:   sent,
+		RecvBytes:   recv,
+		ConnectedAt: ct.Format(time.RFC3339),
+		ClientIP:    clientIP,
+		PhoneMAC:    phoneMAC,
 	}
 }
 
