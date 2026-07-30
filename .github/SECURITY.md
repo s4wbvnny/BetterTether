@@ -43,8 +43,7 @@ You can report vulnerabilities privately directly through the GitHub repository:
 
 ### 2. Direct Contact
 If you prefer, or do not have a GitHub account, you can reach out to the author privately via:
-- 🔗 **LinkedIn**: [Prince Pal](https://www.linkedin.com/in/theprincepal/)
-- 🤖 **Reddit**: [u/PrincePal_](https://www.reddit.com/user/PrincePal_/)
+- 🔗 **LinkedIn**: [Thomas Bugyei](https://www.linkedin.com/in/thomasbugyei/)
 
 ---
 
