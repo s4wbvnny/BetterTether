@@ -111,16 +111,6 @@ The app shows real-time traffic stats (uploaded/downloaded), connection status, 
 
 ---
 
-## Uninstalling
-
-### From the App
-Open BetterTether's **Settings** panel and click **Uninstall** — removes the daemon binary, launchd plist, config, logs, and app caches. Dragging the app to Trash without uninstalling first will leave the daemon running; use Uninstall first.
-
-### Manual
-```bash
-sudo bash uninstall.sh
-```
-
 ---
 
 ## Community
