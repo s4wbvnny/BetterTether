@@ -70,7 +70,7 @@ Download the latest `BetterTether-*.dmg` from the [Releases](https://github.com/
 1. Try to open BetterTether — you'll see *"BetterTether can't be opened"*.
 2. Go to **System Settings → Privacy & Security**.
 3. Scroll down — you'll see a message about BetterTether being blocked. Click **Open Anyway**.
-4. Enter your password when prompted.
+4. Verify using your biometrics or password.
 
 This only needs to be done once. After that, BetterTether opens normally.
 
