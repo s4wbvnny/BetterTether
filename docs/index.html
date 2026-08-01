@@ -385,12 +385,129 @@
     /* Animations */
     .fade-in {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(30px);
       transition: opacity 0.6s ease-out, transform 0.6s ease-out;
     }
     .fade-in.visible {
       opacity: 1;
       transform: translateY(0);
+    }
+    .fade-in-left {
+      opacity: 0;
+      transform: translateX(-40px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .fade-in-left.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .fade-in-right {
+      opacity: 0;
+      transform: translateX(40px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .fade-in-right.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .pop-in {
+      opacity: 0;
+      transform: scale(0.85);
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    }
+    .pop-in.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+    .modal h3 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: var(--heading);
+    }
+    .modal p {
+      color: var(--body);
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+    .modal-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--heading);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .modal-option:hover {
+      border-color: var(--blue);
+      background: color-mix(in srgb, var(--card-bg) 92%, var(--blue));
+    }
+    .modal-option-left {
+      text-align: left;
+    }
+    .modal-option-left strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+    .modal-option-left span {
+      font-size: 12px;
+      color: var(--body);
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--body);
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 16px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: color 0.2s;
+    }
+    .modal-close:hover {
+      color: var(--heading);
     }
   </style>
 </head>
@@ -402,7 +519,7 @@
       <h1>Seamless Android Tethering<br>for Mac</h1>
       <p class="hero-subtitle">No Kernel Extensions. No SIP Changes. No Reboots.</p>
       <div class="hero-cta">
-        <a href="https://github.com/s4wbvnny/BetterTether/releases/latest" class="btn btn-primary" target="_blank" rel="noopener">Download for Free</a>
+        <a href="#" class="btn btn-primary" id="downloadBtn">Download for Free</a>
         <a href="https://github.com/s4wbvnny/BetterTether" class="btn btn-secondary" target="_blank" rel="noopener">View on GitHub &rarr;</a>
       </div>
       <div class="hero-illustration">
@@ -451,12 +568,12 @@
   <section class="section problem-solution fade-in">
     <div class="container">
       <div class="cards-grid">
-        <div class="card">
+        <div class="card fade-in-left">
           <div class="card-icon question">?</div>
           <h3>Tethering Should Just Work</h3>
           <p>USB-C is universal. Android has built-in tethering. Why can't your Mac use it?</p>
         </div>
-        <div class="card">
+        <div class="card fade-in-right">
           <div class="card-icon positive">&check;</div>
           <h3>BetterTether Fixes This</h3>
           <p>A lightweight userspace daemon that brings high-performance USB tethering to macOS.</p>
@@ -470,7 +587,7 @@
     <div class="container text-center">
       <h2>How It Works</h2>
       <p class="section-subtitle">A simple data flow from your phone to your Mac</p>
-      <div class="diagram">
+      <div class="diagram pop-in">
         <svg viewBox="0 0 800 120" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="10" y="30" width="120" height="60" rx="8" fill="var(--svg-fill)" stroke="var(--svg-stroke)"/>
           <text x="70" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="var(--svg-text)" font-family="Inter, sans-serif">Android</text>
@@ -503,28 +620,28 @@
       <h2 class="text-center">Why BetterTether?</h2>
       <p class="section-subtitle text-center">Built for the way you work</p>
       <div class="features-grid">
-        <div class="feature">
+        <div class="feature pop-in">
           <div class="feature-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <h3>Zero System Changes</h3>
           <p>Runs entirely in userspace. No SIP disabling, no reduced security, no kernel extensions.</p>
         </div>
-        <div class="feature">
+        <div class="feature pop-in">
           <div class="feature-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
           </div>
           <h3>Apple Silicon Native</h3>
           <p>Built from the ground up for M1, M2, M3, M4, and M5 Macs.</p>
         </div>
-        <div class="feature">
+        <div class="feature pop-in">
           <div class="feature-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
           </div>
           <h3>All Android Phones</h3>
           <p>Handles dynamic MAC address randomization across all Android devices, not just Samsung.</p>
         </div>
-        <div class="feature">
+        <div class="feature pop-in">
           <div class="feature-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
@@ -619,6 +736,31 @@
     </div>
   </section>
 
+  <!-- Download Modal -->
+  <div class="modal-overlay" id="downloadModal">
+    <div class="modal">
+      <h3>Download BetterTether</h3>
+      <p>Choose your Mac architecture:</p>
+      <div class="modal-options">
+        <a href="https://github.com/s4wbvnny/BetterTether/releases/latest/download/BetterTether-arm64.dmg" class="modal-option" target="_blank" rel="noopener">
+          <div class="modal-option-left">
+            <strong>Apple Silicon</strong>
+            <span>M1, M2, M3, M4, M5</span>
+          </div>
+          <span>&darr;</span>
+        </a>
+        <a href="https://github.com/s4wbvnny/BetterTether/releases/latest/download/BetterTether-x64.dmg" class="modal-option" target="_blank" rel="noopener">
+          <div class="modal-option-left">
+            <strong>Intel</strong>
+            <span>Any Intel Mac</span>
+          </div>
+          <span>&darr;</span>
+        </a>
+      </div>
+      <button class="modal-close" id="modalClose">Cancel</button>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
@@ -644,7 +786,22 @@
         }
       });
     }, { threshold: 0.1 });
-    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    document.querySelectorAll('.fade-in, .fade-in-left, .fade-in-right, .pop-in').forEach(el => observer.observe(el));
+
+    document.querySelectorAll('.features-grid').forEach(grid => {
+      const cards = grid.querySelectorAll('.feature');
+      const gridObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            cards.forEach((card, i) => {
+              setTimeout(() => card.classList.add('visible'), i * 150);
+            });
+          }
+        });
+      }, { threshold: 0.2 });
+      gridObserver.observe(grid);
+    });
 
     document.querySelectorAll('.install-option pre').forEach(pre => {
       pre.addEventListener('click', () => {
@@ -664,6 +821,31 @@
           }
         });
       });
+    });
+
+    const modal = document.getElementById('downloadModal');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const modalClose = document.getElementById('modalClose');
+
+    downloadBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      modal.classList.add('active');
+    });
+
+    modalClose.addEventListener('click', () => {
+      modal.classList.remove('active');
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        modal.classList.remove('active');
+      }
     });
   </script>
 </body>
