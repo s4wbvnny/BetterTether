@@ -17,21 +17,56 @@
     html { scroll-behavior: smooth; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      color: #1D1D1F;
-      background: #FFFFFF;
+      color: var(--heading);
+      background: var(--bg);
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      transition: background 0.3s, color 0.3s;
     }
     :root {
       --blue: #0071E3;
       --blue-hover: #0077ED;
-      --gray-heading: #1D1D1F;
-      --gray-body: #6E6E73;
-      --gray-light: #F5F5F7;
-      --gray-border: #D2D2D7;
+      --heading: #1D1D1F;
+      --body: #6E6E73;
+      --bg: #FFFFFF;
+      --bg-alt: #F5F5F7;
+      --bg-card: #FFFFFF;
+      --border: #D2D2D7;
+      --code-bg: #1D1D1F;
+      --code-fg: #F5F5F7;
+      --callout-bg: #FFF8E1;
+      --callout-border: #FFE082;
+      --shadow-card: rgba(0,0,0,0.06);
+      --shadow-hover: rgba(0,0,0,0.1);
+      --svg-stroke: #D2D2D7;
+      --svg-fill: #F5F5F7;
+      --svg-text: #1D1D1F;
+      --svg-subtext: #6E6E73;
       --radius-card: 12px;
       --radius-btn: 8px;
       --max-width: 980px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --blue: #0A84FF;
+        --blue-hover: #409CFF;
+        --heading: #F5F5F7;
+        --body: #A1A1A6;
+        --bg: #000000;
+        --bg-alt: #1C1C1E;
+        --bg-card: #1C1C1E;
+        --border: #38383A;
+        --code-bg: #1C1C1E;
+        --code-fg: #F5F5F7;
+        --callout-bg: #2C2200;
+        --callout-border: #5C4400;
+        --shadow-card: rgba(0,0,0,0.3);
+        --shadow-hover: rgba(0,0,0,0.5);
+        --svg-stroke: #38383A;
+        --svg-fill: #1C1C1E;
+        --svg-text: #F5F5F7;
+        --svg-subtext: #A1A1A6;
+      }
     }
     .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
     .section { padding: 80px 0; }
@@ -63,44 +98,51 @@
     }
     .hero-subtitle {
       font-size: clamp(17px, 2.5vw, 21px);
-      color: var(--gray-body);
+      color: var(--body);
       margin-bottom: 32px;
     }
     .hero-cta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px; }
     .hero-illustration { display: flex; justify-content: center; }
     .hero-illustration svg { max-width: 100%; height: auto; }
+    .hero-illustration svg rect { transition: fill 0.3s, stroke 0.3s; }
+    .hero-illustration svg line { transition: stroke 0.3s; }
+    .hero-illustration svg circle { transition: fill 0.3s; }
 
     /* Problem / Solution */
-    .problem-solution { background: var(--gray-light); }
+    .problem-solution { background: var(--bg-alt); }
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 24px;
     }
     .card {
-      background: #fff;
+      background: var(--bg-card);
       padding: 32px;
       border-radius: var(--radius-card);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      box-shadow: 0 1px 3px var(--shadow-card);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--shadow-hover);
     }
     .card-icon {
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background: var(--gray-light);
+      background: var(--bg-alt);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 20px;
       margin-bottom: 16px;
       font-weight: 600;
-      color: var(--gray-body);
+      color: var(--body);
     }
-    .card-icon.negative { color: #FF3B30; }
     .card-icon.question { color: #FF9500; }
     .card-icon.positive { color: #34C759; }
     .card h3 { font-size: 20px; margin-bottom: 8px; }
-    .card p { color: var(--gray-body); font-size: 15px; line-height: 1.6; }
+    .card p { color: var(--body); font-size: 15px; line-height: 1.6; }
 
     /* How It Works */
     .how-it-works h2 {
@@ -109,12 +151,15 @@
       margin-bottom: 8px;
     }
     .section-subtitle {
-      color: var(--gray-body);
+      color: var(--body);
       font-size: 17px;
       margin-bottom: 48px;
     }
     .diagram { overflow-x: auto; }
     .diagram svg { max-width: 100%; height: auto; }
+    .diagram svg rect { transition: fill 0.3s, stroke 0.3s; }
+    .diagram svg line { transition: stroke 0.3s; }
+    .diagram svg text { transition: fill 0.3s; }
 
     /* Features */
     .features h2 {
@@ -131,7 +176,12 @@
     .feature {
       padding: 32px;
       border-radius: var(--radius-card);
-      border: 1px solid var(--gray-border);
+      border: 1px solid var(--border);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--shadow-hover);
     }
     .feature-icon {
       width: 48px;
@@ -144,10 +194,10 @@
       margin-bottom: 16px;
     }
     .feature h3 { font-size: 18px; margin-bottom: 8px; }
-    .feature p { color: var(--gray-body); font-size: 15px; line-height: 1.6; }
+    .feature p { color: var(--body); font-size: 15px; line-height: 1.6; }
 
     /* Install */
-    .install { background: var(--gray-light); }
+    .install { background: var(--bg-alt); }
     .install h2 {
       font-size: clamp(28px, 4vw, 40px);
       font-weight: 700;
@@ -160,16 +210,21 @@
       margin-top: 48px;
     }
     .install-option {
-      background: #fff;
+      background: var(--bg-card);
       padding: 32px;
       border-radius: var(--radius-card);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      box-shadow: 0 1px 3px var(--shadow-card);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .install-option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--shadow-hover);
     }
     .install-option h3 { font-size: 18px; margin-bottom: 8px; }
-    .install-option p { color: var(--gray-body); font-size: 15px; margin-bottom: 16px; }
+    .install-option p { color: var(--body); font-size: 15px; margin-bottom: 16px; }
     .install-option pre {
-      background: #1D1D1F;
-      color: #F5F5F7;
+      background: var(--code-bg);
+      color: var(--code-fg);
       padding: 16px;
       border-radius: 8px;
       overflow-x: auto;
@@ -194,31 +249,31 @@
     .compat-card {
       padding: 32px;
       border-radius: var(--radius-card);
-      border: 1px solid var(--gray-border);
+      border: 1px solid var(--border);
     }
     .compat-card.works { border-left: 4px solid #34C759; }
     .compat-card h3 { font-size: 18px; margin-bottom: 16px; color: #34C759; }
     .compat-card ul { list-style: none; }
     .compat-card li {
       padding: 8px 0;
-      border-bottom: 1px solid var(--gray-light);
-      color: var(--gray-body);
+      border-bottom: 1px solid var(--bg-alt);
+      color: var(--body);
       font-size: 15px;
     }
     .compat-card li:last-child { border-bottom: none; }
-    .compat-card li::before { content: "\2022 "; color: var(--gray-body); }
+    .compat-card li::before { content: "\2022 "; color: var(--body); }
     .callout {
-      background: #FFF8E1;
-      border: 1px solid #FFE082;
+      background: var(--callout-bg);
+      border: 1px solid var(--callout-border);
       border-radius: var(--radius-card);
       padding: 24px;
       font-size: 15px;
       line-height: 1.6;
     }
-    .callout strong { color: #1D1D1F; }
+    .callout strong { color: var(--heading); }
     .callout pre {
-      background: #1D1D1F;
-      color: #F5F5F7;
+      background: var(--code-bg);
+      color: var(--code-fg);
       padding: 12px 16px;
       border-radius: 8px;
       margin-top: 12px;
@@ -228,7 +283,7 @@
     .callout code { font-family: 'SF Mono', 'Fira Code', monospace; }
 
     /* Security */
-    .security { background: var(--gray-light); }
+    .security { background: var(--bg-alt); }
     .security h2 {
       font-size: clamp(28px, 4vw, 40px);
       font-weight: 700;
@@ -258,7 +313,7 @@
     /* Footer */
     .footer {
       padding: 40px 0;
-      border-top: 1px solid var(--gray-border);
+      border-top: 1px solid var(--border);
     }
     .footer-content {
       display: flex;
@@ -271,7 +326,7 @@
       display: flex;
       gap: 16px;
       align-items: center;
-      color: var(--gray-body);
+      color: var(--body);
       font-size: 14px;
     }
     .footer-right {
@@ -279,7 +334,7 @@
       gap: 24px;
     }
     .footer-right a {
-      color: var(--gray-body);
+      color: var(--body);
       text-decoration: none;
       font-size: 14px;
     }
@@ -294,6 +349,17 @@
       .features-grid { grid-template-columns: 1fr; }
       .footer-content { flex-direction: column; text-align: center; }
       .footer-left { flex-direction: column; }
+    }
+
+    /* Animations */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
   </style>
 </head>
@@ -310,30 +376,31 @@
       </div>
       <div class="hero-illustration">
         <svg width="480" height="160" viewBox="0 0 480 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="40" y="20" width="60" height="120" rx="8" stroke="#D2D2D7" stroke-width="2" fill="none"/>
-          <rect x="50" y="30" width="40" height="90" rx="2" fill="#F5F5F7"/>
-          <circle cx="70" cy="130" r="4" fill="#D2D2D7"/>
-          <line x1="100" y1="80" x2="320" y2="80" stroke="#D2D2D7" stroke-width="3" stroke-dasharray="6 4"/>
-          <circle cx="100" cy="80" r="6" fill="#0071E3"/>
-          <circle cx="320" cy="80" r="6" fill="#0071E3"/>
-          <rect x="340" y="30" width="110" height="80" rx="6" stroke="#D2D2D7" stroke-width="2" fill="none"/>
-          <rect x="350" y="40" width="90" height="60" rx="2" fill="#F5F5F7"/>
-          <path d="M320 110 L360 110 L420 110 L460 110" stroke="#D2D2D7" stroke-width="2"/>
-          <rect x="310" y="110" width="170" height="6" rx="3" fill="#D2D2D7"/>
+          <rect x="40" y="20" width="60" height="120" rx="8" stroke="var(--svg-stroke)" stroke-width="2" fill="none"/>
+          <rect x="50" y="30" width="40" height="90" rx="2" fill="var(--svg-fill)"/>
+          <circle cx="70" cy="130" r="4" fill="var(--svg-stroke)"/>
+          <line x1="100" y1="80" x2="320" y2="80" stroke="var(--svg-stroke)" stroke-width="3" stroke-dasharray="6 4"/>
+          <circle cx="100" cy="80" r="6" fill="var(--blue)">
+            <animate attributeName="r" values="6;8;6" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="1;0.6;1" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="320" cy="80" r="6" fill="var(--blue)">
+            <animate attributeName="r" values="6;8;6" dur="2s" repeatCount="indefinite" begin="1s"/>
+            <animate attributeName="opacity" values="1;0.6;1" dur="2s" repeatCount="indefinite" begin="1s"/>
+          </circle>
+          <rect x="340" y="30" width="110" height="80" rx="6" stroke="var(--svg-stroke)" stroke-width="2" fill="none"/>
+          <rect x="350" y="40" width="90" height="60" rx="2" fill="var(--svg-fill)"/>
+          <path d="M320 110 L360 110 L420 110 L460 110" stroke="var(--svg-stroke)" stroke-width="2"/>
+          <rect x="310" y="110" width="170" height="6" rx="3" fill="var(--svg-stroke)"/>
         </svg>
       </div>
     </div>
   </section>
 
   <!-- Problem / Solution -->
-  <section class="section problem-solution">
+  <section class="section problem-solution fade-in">
     <div class="container">
       <div class="cards-grid">
-        <div class="card">
-          <div class="card-icon negative">&times;</div>
-          <h3>HoRNDIS is Dead</h3>
-          <p>The old solution relied on kernel extensions. macOS no longer supports them on Apple Silicon.</p>
-        </div>
         <div class="card">
           <div class="card-icon question">?</div>
           <h3>Tethering Should Just Work</h3>
@@ -349,40 +416,40 @@
   </section>
 
   <!-- How It Works -->
-  <section class="section how-it-works">
+  <section class="section how-it-works fade-in">
     <div class="container text-center">
       <h2>How It Works</h2>
       <p class="section-subtitle">A simple data flow from your phone to your Mac</p>
       <div class="diagram">
         <svg viewBox="0 0 800 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="10" y="30" width="120" height="60" rx="8" fill="#F5F5F7" stroke="#D2D2D7"/>
-          <text x="70" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="#1D1D1F" font-family="Inter, sans-serif">Android</text>
-          <text x="70" y="72" text-anchor="middle" font-size="11" fill="#6E6E73" font-family="Inter, sans-serif">Phone</text>
-          <line x1="130" y1="60" x2="200" y2="60" stroke="#D2D2D7" stroke-width="2"/>
-          <polygon points="198,55 208,60 198,65" fill="#D2D2D7"/>
-          <text x="165" y="50" text-anchor="middle" font-size="10" fill="#6E6E73" font-family="Inter, sans-serif">USB</text>
-          <rect x="210" y="30" width="160" height="60" rx="8" fill="#0071E3"/>
+          <rect x="10" y="30" width="120" height="60" rx="8" fill="var(--svg-fill)" stroke="var(--svg-stroke)"/>
+          <text x="70" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="var(--svg-text)" font-family="Inter, sans-serif">Android</text>
+          <text x="70" y="72" text-anchor="middle" font-size="11" fill="var(--svg-subtext)" font-family="Inter, sans-serif">Phone</text>
+          <line x1="130" y1="60" x2="200" y2="60" stroke="var(--svg-stroke)" stroke-width="2"/>
+          <polygon points="198,55 208,60 198,65" fill="var(--svg-stroke)"/>
+          <text x="165" y="50" text-anchor="middle" font-size="10" fill="var(--svg-subtext)" font-family="Inter, sans-serif">USB</text>
+          <rect x="210" y="30" width="160" height="60" rx="8" fill="var(--blue)"/>
           <text x="290" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="#fff" font-family="Inter, sans-serif">BetterTether</text>
           <text x="290" y="72" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.8)" font-family="Inter, sans-serif">Daemon</text>
-          <line x1="370" y1="60" x2="440" y2="60" stroke="#D2D2D7" stroke-width="2"/>
-          <polygon points="438,55 448,60 438,65" fill="#D2D2D7"/>
-          <text x="405" y="50" text-anchor="middle" font-size="10" fill="#6E6E73" font-family="Inter, sans-serif">utun</text>
-          <rect x="450" y="30" width="120" height="60" rx="8" fill="#F5F5F7" stroke="#D2D2D7"/>
-          <text x="510" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="#1D1D1F" font-family="Inter, sans-serif">macOS</text>
-          <text x="510" y="72" text-anchor="middle" font-size="11" fill="#6E6E73" font-family="Inter, sans-serif">Network Stack</text>
-          <line x1="570" y1="60" x2="640" y2="60" stroke="#D2D2D7" stroke-width="2"/>
-          <polygon points="638,55 648,60 638,65" fill="#D2D2D7"/>
-          <text x="605" y="50" text-anchor="middle" font-size="10" fill="#6E6E73" font-family="Inter, sans-serif">Wi-Fi</text>
-          <rect x="650" y="30" width="120" height="60" rx="8" fill="#F5F5F7" stroke="#D2D2D7"/>
-          <text x="710" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="#1D1D1F" font-family="Inter, sans-serif">Internet</text>
-          <text x="710" y="72" text-anchor="middle" font-size="11" fill="#6E6E73" font-family="Inter, sans-serif">via Mobile</text>
+          <line x1="370" y1="60" x2="440" y2="60" stroke="var(--svg-stroke)" stroke-width="2"/>
+          <polygon points="438,55 448,60 438,65" fill="var(--svg-stroke)"/>
+          <text x="405" y="50" text-anchor="middle" font-size="10" fill="var(--svg-subtext)" font-family="Inter, sans-serif">utun</text>
+          <rect x="450" y="30" width="120" height="60" rx="8" fill="var(--svg-fill)" stroke="var(--svg-stroke)"/>
+          <text x="510" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="var(--svg-text)" font-family="Inter, sans-serif">macOS</text>
+          <text x="510" y="72" text-anchor="middle" font-size="11" fill="var(--svg-subtext)" font-family="Inter, sans-serif">Network Stack</text>
+          <line x1="570" y1="60" x2="640" y2="60" stroke="var(--svg-stroke)" stroke-width="2"/>
+          <polygon points="638,55 648,60 638,65" fill="var(--svg-stroke)"/>
+          <text x="605" y="50" text-anchor="middle" font-size="10" fill="var(--svg-subtext)" font-family="Inter, sans-serif">Wi-Fi</text>
+          <rect x="650" y="30" width="120" height="60" rx="8" fill="var(--svg-fill)" stroke="var(--svg-stroke)"/>
+          <text x="710" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="var(--svg-text)" font-family="Inter, sans-serif">Internet</text>
+          <text x="710" y="72" text-anchor="middle" font-size="11" fill="var(--svg-subtext)" font-family="Inter, sans-serif">via Mobile</text>
         </svg>
       </div>
     </div>
   </section>
 
   <!-- Features -->
-  <section class="section features">
+  <section class="section features fade-in">
     <div class="container">
       <h2 class="text-center">Why BetterTether?</h2>
       <p class="section-subtitle text-center">Built for the way you work</p>
@@ -405,8 +472,8 @@
           <div class="feature-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
           </div>
-          <h3>Samsung Friendly</h3>
-          <p>Specialized workaround for Samsung's dynamic MAC address randomization on tethering interfaces.</p>
+          <h3>All Android Phones</h3>
+          <p>Handles dynamic MAC address randomization across all Android devices, not just Samsung.</p>
         </div>
         <div class="feature">
           <div class="feature-icon">
@@ -420,7 +487,7 @@
   </section>
 
   <!-- Install -->
-  <section class="section install" id="install">
+  <section class="section install fade-in" id="install">
     <div class="container">
       <h2 class="text-center">Install in Seconds</h2>
       <p class="section-subtitle text-center">Choose the method that works for you</p>
@@ -447,7 +514,7 @@ make app</code></pre>
   </section>
 
   <!-- macOS 15 Compatibility -->
-  <section class="section compatibility">
+  <section class="section compatibility fade-in">
     <div class="container">
       <h2 class="text-center">macOS 15 (Tahoe) Compatibility</h2>
       <p class="section-subtitle text-center">What works and what to watch out for</p>
@@ -478,7 +545,7 @@ make app</code></pre>
   </section>
 
   <!-- Security -->
-  <section class="section security">
+  <section class="section security fade-in">
     <div class="container text-center">
       <h2>Built on Trust</h2>
       <p class="section-subtitle">Zero telemetry. Local logs only. 100% auditable.</p>
@@ -520,5 +587,15 @@ make app</code></pre>
     </div>
   </footer>
 
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>
 </body>
 </html>
