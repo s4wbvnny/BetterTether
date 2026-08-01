@@ -230,12 +230,11 @@
     .install-option pre {
       background: var(--code-bg);
       color: var(--code-fg);
-      padding: 16px 48px 16px 16px;
+      padding: 16px;
       border-radius: 8px;
       overflow-x: auto;
       font-size: 13px;
       line-height: 1.6;
-      position: relative;
       cursor: pointer;
       transition: background 0.2s;
       white-space: nowrap;
@@ -243,18 +242,15 @@
     .install-option pre:hover {
       background: color-mix(in srgb, var(--code-bg) 90%, var(--blue));
     }
-    .install-option pre .copy-hint {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
+    .copy-hint {
       font-size: 11px;
       color: var(--body);
       opacity: 0;
       transition: opacity 0.2s;
-      pointer-events: none;
+      margin-top: 6px;
+      text-align: right;
     }
-    .install-option pre:hover .copy-hint {
+    .install-option pre:hover ~ .copy-hint {
       opacity: 1;
     }
     .install-option pre.copied .copy-hint {
@@ -670,7 +666,8 @@
         <div class="install-option">
           <h3>One-Liner</h3>
           <p>Paste this in Terminal:</p>
-          <pre><code>curl -sL https://raw.githubusercontent.com/s4wbvnny/BetterTether/main/install.sh | sudo bash</code><span class="copy-hint">Click to copy</span></pre>
+          <pre><code>curl -sL https://raw.githubusercontent.com/s4wbvnny/BetterTether/main/install.sh | sudo bash</code></pre>
+          <span class="copy-hint">Click to copy</span>
         </div>
         <div class="install-row">
           <div class="install-option">
@@ -681,7 +678,8 @@
           <div class="install-option">
             <h3>Build from Source</h3>
             <p>For developers. Requires Go, libusb, and Node.js.</p>
-            <pre><code>git clone https://github.com/s4wbvnny/BetterTether && cd BetterTether && make app</code><span class="copy-hint">Click to copy</span></pre>
+            <pre><code>git clone https://github.com/s4wbvnny/BetterTether && cd BetterTether && make app</code></pre>
+            <span class="copy-hint">Click to copy</span>
           </div>
         </div>
       </div>
@@ -815,10 +813,10 @@
     document.querySelectorAll('.install-option pre').forEach(pre => {
       pre.addEventListener('click', () => {
         const code = pre.querySelector('code');
-        const hint = pre.querySelector('.copy-hint');
+        const hint = pre.nextElementSibling;
         const text = code ? code.textContent : pre.textContent;
         navigator.clipboard.writeText(text).then(() => {
-          if (hint) {
+          if (hint && hint.classList.contains('copy-hint')) {
             hint.textContent = 'Copied!';
             hint.style.color = '#34C759';
             hint.style.opacity = '1';
