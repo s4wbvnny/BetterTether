@@ -44,7 +44,7 @@ jobs:
           cd gui
           npm install
           npm run build
-          npx electron-builder --mac dmg --arm64
+          npx electron-builder --publish never --mac dmg --arm64
 
       - name: Upload arm64 artifacts
         uses: actions/upload-artifact@v4
@@ -90,7 +90,7 @@ jobs:
           cd gui
           npm install
           npm run build
-          npx electron-builder --mac dmg --x64
+          npx electron-builder --publish never --mac dmg --x64
 
       - name: Upload x64 artifacts
         uses: actions/upload-artifact@v4

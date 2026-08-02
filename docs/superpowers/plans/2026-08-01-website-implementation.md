@@ -1,0 +1,829 @@
+# BetterTether Website Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build a single-page static HTML landing site for BetterTether, deployed from `docs/` folder via GitHub Pages.
+
+**Architecture:** Single `index.html` file with embedded CSS. No build tools, no JS frameworks. Inline SVGs for all illustrations. Inter font from Google Fonts.
+
+**Tech Stack:** HTML5, CSS3, inline SVG, Google Fonts (Inter)
+
+## Global Constraints
+
+- Single `index.html` file with all CSS embedded in `<style>` tags
+- No external CSS/JS files or frameworks
+- All illustrations as inline SVG (no image files)
+- Inter font from Google Fonts CDN
+- Responsive: mobile-first, breakpoints at 768px and 1024px
+- Max content width: 980px
+- Primary blue: #0071E3
+- Gray text: #1D1D1F (headings), #6E6E73 (body)
+- Border radius: 12px for cards, 8px for buttons
+- Deployed from `docs/index.html` on `main` branch
+
+---
+
+### Task 1: Create index.html with document structure, CSS reset, and typography
+
+**Files:**
+- Create: `docs/index.html`
+
+**Interfaces:**
+- Produces: Complete HTML skeleton with embedded CSS reset, typography base, and CSS custom properties for the design system
+
+- [ ] **Step 1: Create the HTML file with DOCTYPE, meta tags, and font import**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BetterTether — Seamless Android Tethering for Mac</title>
+  <meta name="description" content="High-performance USB tethering for Apple Silicon Macs. No kernel extensions. No SIP changes. No reboots.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* CSS will go here */
+  </style>
+</head>
+<body>
+</body>
+</html>
+```
+
+- [ ] **Step 2: Add CSS reset and design tokens inside `<style>`**
+
+```css
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #1D1D1F;
+  background: #FFFFFF;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+:root {
+  --blue: #0071E3;
+  --blue-hover: #0077ED;
+  --gray-heading: #1D1D1F;
+  --gray-body: #6E6E73;
+  --gray-light: #F5F5F7;
+  --gray-border: #D2D2D7;
+  --radius-card: 12px;
+  --radius-btn: 8px;
+  --max-width: 980px;
+}
+```
+
+- [ ] **Step 3: Add utility classes**
+
+```css
+.container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+.section { padding: 80px 0; }
+.text-center { text-align: center; }
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: var(--radius-btn);
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 17px;
+  transition: background 0.2s;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: var(--blue-hover); }
+.btn-secondary { background: transparent; color: var(--blue); }
+.btn-secondary:hover { color: var(--blue-hover); }
+```
+
+- [ ] **Step 4: Verify file structure is valid HTML**
+
+Run: `python3 -c "from html.parser import HTMLParser; HTMLParser().feed(open('docs/index.html').read()); print('Valid HTML')"`
+Expected: `Valid HTML`
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add docs/index.html
+git commit -m "feat: scaffold website HTML with CSS reset and design tokens"
+```
+
+---
+
+### Task 2: Build the Hero section
+
+**Files:**
+- Modify: `docs/index.html`
+
+**Interfaces:**
+- Consumes: CSS variables and utility classes from Task 1
+- Produces: Hero section with headline, subtitle, CTA buttons, and SVG illustration
+
+- [ ] **Step 1: Add hero section HTML inside `<body>`**
+
+```html
+<section class="hero">
+  <div class="container text-center">
+    <h1>Seamless Android Tethering<br>for Mac</h1>
+    <p class="hero-subtitle">No Kernel Extensions. No SIP Changes. No Reboots.</p>
+    <div class="hero-cta">
+      <a href="https://github.com/s4wbvnny/BetterTether/releases/latest" class="btn btn-primary" target="_blank" rel="noopener">Download for Free</a>
+      <a href="https://github.com/s4wbvnny/BetterTether" class="btn btn-secondary" target="_blank" rel="noopener">View on GitHub →</a>
+    </div>
+    <div class="hero-illustration">
+      <!-- SVG goes here in Step 2 -->
+    </div>
+  </div>
+</section>
+```
+
+- [ ] **Step 2: Create inline SVG illustration (phone + cable + laptop)**
+
+Replace the `<!-- SVG goes here -->` comment with:
+
+```svg
+<svg width="480" height="160" viewBox="0 0 480 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Phone -->
+  <rect x="40" y="20" width="60" height="120" rx="8" stroke="#D2D2D7" stroke-width="2" fill="none"/>
+  <rect x="50" y="30" width="40" height="90" rx="2" fill="#F5F5F7"/>
+  <circle cx="70" cy="130" r="4" fill="#D2D2D7"/>
+  <!-- Cable -->
+  <line x1="100" y1="80" x2="320" y2="80" stroke="#D2D2D7" stroke-width="3" stroke-dasharray="6 4"/>
+  <circle cx="100" cy="80" r="6" fill="#0071E3"/>
+  <circle cx="320" cy="80" r="6" fill="#0071E3"/>
+  <!-- Laptop -->
+  <rect x="340" y="30" width="110" height="80" rx="6" stroke="#D2D2D7" stroke-width="2" fill="none"/>
+  <rect x="350" y="40" width="90" height="60" rx="2" fill="#F5F5F7"/>
+  <path d="M320 110 L360 110 L420 110 L460 110" stroke="#D2D2D7" stroke-width="2"/>
+  <rect x="310" y="110" width="170" height="6" rx="3" fill="#D2D2D7"/>
+</svg>
+```
+
+- [ ] **Step 3: Add hero CSS**
+
+```css
+.hero { padding: 120px 0 80px; }
+.hero h1 {
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+.hero-subtitle {
+  font-size: clamp(17px, 2.5vw, 21px);
+  color: var(--gray-body);
+  margin-bottom: 32px;
+}
+.hero-cta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px; }
+.hero-illustration { display: flex; justify-content: center; }
+.hero-illustration svg { max-width: 100%; height: auto; }
+```
+
+- [ ] **Step 4: Verify page renders**
+
+Run: `python3 -c "import re; html=open('docs/index.html').read(); assert '<section class=\"hero\">' in html; assert '<svg' in html; print('Hero section present')"`
+Expected: `Hero section present`
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add docs/index.html
+git commit -m "feat: add hero section with headline, CTA, and SVG illustration"
+```
+
+---
+
+### Task 3: Build the Problem → Solution section
+
+**Files:**
+- Modify: `docs/index.html`
+
+**Interfaces:**
+- Consumes: CSS variables from Task 1
+- Produces: Three-card section explaining the problem and solution
+
+- [ ] **Step 1: Add problem-solution section HTML**
+
+```html
+<section class="section problem-solution">
+  <div class="container">
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon">✕</div>
+        <h3>HoRNDIS is Dead</h3>
+        <p>The old solution relied on kernel extensions. macOS no longer supports them on Apple Silicon.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">?</div>
+        <h3>Tethering Should Just Work</h3>
+        <p>USB-C is universal. Android has built-in tethering. Why can't your Mac use it?</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">✓</div>
+        <h3>BetterTether Fixes This</h3>
+        <p>A lightweight userspace daemon that brings high-performance USB tethering to macOS.</p>
+      </div>
+    </div>
+  </div>
+</section>
+```
+
+- [ ] **Step 2: Add problem-solution CSS**
+
+```css
+.problem-solution { background: var(--gray-light); }
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+.card {
+  background: #fff;
+  padding: 32px;
+  border-radius: var(--radius-card);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--gray-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+.card h3 { font-size: 20px; margin-bottom: 8px; }
+.card p { color: var(--gray-body); font-size: 15px; line-height: 1.6; }
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add docs/index.html
+git commit -m "feat: add problem-solution cards section"
+```
+
+---
+
+### Task 4: Build the How It Works section with data flow diagram
+
+**Files:**
+- Modify: `docs/index.html`
+
+**Interfaces:**
+- Consumes: CSS variables from Task 1
+- Produces: Simplified data flow diagram as inline SVG
+
+- [ ] **Step 1: Add how-it-works section HTML**
+
+```html
+<section class="section how-it-works">
+  <div class="container text-center">
+    <h2>How It Works</h2>
+    <p class="section-subtitle">A simple data flow from your phone to your Mac</p>
+    <div class="diagram">
+      <svg viewBox="0 0 800 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Step 1: Phone -->
+        <rect x="10" y="30" width="120" height="60" rx="8" fill="#F5F5F7" stroke="#D2D2D7"/>
+        <text x="70" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="#1D1D1F">Android</text>
+        <text x="70" y="72" text-anchor="middle" font-size="11" fill="#6E6E73">Phone</text>
+        <!-- Arrow 1 -->
+        <line x1="130" y1="60" x2="200" y2="60" stroke="#D2D2D7" stroke-width="2"/>
+        <polygon points="198,55 208,60 198,65" fill="#D2D2D7"/>
+        <text x="165" y="50" text-anchor="middle" font-size="10" fill="#6E6E73">USB</text>
+        <!-- Step 2: Daemon -->
+        <rect x="210" y="30" width="160" height="60" rx="8" fill="#0071E3"/>
+        <text x="290" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">BetterTether</text>
+        <text x="290" y="72" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.8)">Daemon</text>
+        <!-- Arrow 2 -->
+        <line x1="370" y1="60" x2="440" y2="60" stroke="#D2D2D7" stroke-width="2"/>
+        <polygon points="438,55 448,60 438,65" fill="#D2D2D7"/>
+        <text x="405" y="50" text-anchor="middle" font-size="10" fill="#6E6E73">utun</text>
+        <!-- Step 3: Mac -->
+        <rect x="450" y="30" width="120" height="60" rx="8" fill="#F5F5F7" stroke="#D2D2D7"/>
+        <text x="510" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="#1D1D1F">macOS</text>
+        <text x="510" y="72" text-anchor="middle" font-size="11" fill="#6E6E73">Network Stack</text>
+        <!-- Arrow 3 -->
+        <line x1="570" y1="60" x2="640" y2="60" stroke="#D2D2D7" stroke-width="2"/>
+        <polygon points="638,55 648,60 638,65" fill="#D2D2D7"/>
+        <text x="605" y="50" text-anchor="middle" font-size="10" fill="#6E6E73">Wi-Fi</text>
+        <!-- Step 4: Internet -->
+        <rect x="650" y="30" width="120" height="60" rx="8" fill="#F5F5F7" stroke="#D2D2D7"/>
+        <text x="710" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="#1D1D1F">Internet</text>
+        <text x="710" y="72" text-anchor="middle" font-size="11" fill="#6E6E73">via Mobile</text>
+      </svg>
+    </div>
+  </div>
+</section>
+```
+
+- [ ] **Step 2: Add how-it-works CSS**
+
+```css
+.how-it-works h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.section-subtitle {
+  color: var(--gray-body);
+  font-size: 17px;
+  margin-bottom: 48px;
+}
+.diagram { overflow-x: auto; }
+.diagram svg { max-width: 100%; height: auto; }
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add docs/index.html
+git commit -m "feat: add how-it-works section with data flow SVG diagram"
+```
+
+---
+
+### Task 5: Build the Features grid section
+
+**Files:**
+- Modify: `docs/index.html`
+
+**Interfaces:**
+- Consumes: CSS variables from Task 1
+- Produces: 2×2 feature grid with inline SVG icons
+
+- [ ] **Step 1: Add features section HTML**
+
+```html
+<section class="section features">
+  <div class="container">
+    <h2 class="text-center">Why BetterTether?</h2>
+    <p class="section-subtitle text-center">Built for the way you work</p>
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>Zero System Changes</h3>
+        <p>Runs entirely in userspace. No SIP disabling, no reduced security, no kernel extensions.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+        </div>
+        <h3>Apple Silicon Native</h3>
+        <p>Built from the ground up for M1, M2, M3, M4, and M5 Macs.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        </div>
+        <h3>Samsung Friendly</h3>
+        <p>Specialized workaround for Samsung's dynamic MAC address randomization on tethering interfaces.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h3>Desktop GUI</h3>
+        <p>Native macOS app with power button, traffic stats, log viewer, and system tray menu.</p>
+      </div>
+    </div>
+  </div>
+</section>
+```
+
+- [ ] **Step 2: Add features CSS**
+
+```css
+.features h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 48px;
+}
+.feature {
+  padding: 32px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--gray-border);
+}
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #EBF5FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.feature h3 { font-size: 18px; margin-bottom: 8px; }
+.feature p { color: var(--gray-body); font-size: 15px; line-height: 1.6; }
+
+@media (max-width: 768px) {
+  .features-grid { grid-template-columns: 1fr; }
+}
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add docs/index.html
+git commit -m "feat: add features grid section with SVG icons"
+```
+
+---
+
+### Task 6: Build the Install section with code blocks
+
+**Files:**
+- Modify: `docs/index.html`
+
+**Interfaces:**
+- Consumes: CSS variables from Task 1
+- Produces: Install section with three installation options
+
+- [ ] **Step 1: Add install section HTML**
+
+```html
+<section class="section install" id="install">
+  <div class="container">
+    <h2 class="text-center">Install in Seconds</h2>
+    <p class="section-subtitle text-center">Choose the method that works for you</p>
+    <div class="install-grid">
+      <div class="install-option">
+        <h3>Download the DMG</h3>
+        <p>The easiest way. Download, drag to Applications, done.</p>
+        <a href="https://github.com/s4wbvnny/BetterTether/releases/latest" class="btn btn-primary" target="_blank" rel="noopener">Download Latest Release</a>
+      </div>
+      <div class="install-option">
+        <h3>One-Liner</h3>
+        <p>Paste this in Terminal:</p>
+        <pre><code>curl -sL https://raw.githubusercontent.com/s4wbvnny/BetterTether/main/install.sh | sudo bash</code></pre>
+      </div>
+      <div class="install-option">
+        <h3>Build from Source</h3>
+        <p>For developers. Requires Go, libusb, and Node.js.</p>
+        <pre><code>git clone https://github.com/s4wbvnny/BetterTether
+cd BetterTether
+make app</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+```
+
+- [ ] **Step 2: Add install CSS**
+
+```css
+.install { background: var(--gray-light); }
+.install h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.install-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 48px;
+}
+.install-option {
+  background: #fff;
+  padding: 32px;
+  border-radius: var(--radius-card);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.install-option h3 { font-size: 18px; margin-bottom: 8px; }
+.install-option p { color: var(--gray-body); font-size: 15px; margin-bottom: 16px; }
+.install-option pre {
+  background: #1D1D1F;
+  color: #F5F5F7;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.install-option code { font-family: 'SF Mono', 'Fira Code', monospace; }
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add docs/index.html
+git commit -m "feat: add install section with three options and code blocks"
+```
+
+---
+
+### Task 7: Build the macOS 15 Compatibility section
+
+**Files:**
+- Modify: `docs/index.html`
+
+**Interfaces:**
+- Consumes: CSS variables from Task 1
+- Produces: Compatibility section with what-works table and MTU callout
+
+- [ ] **Step 1: Add compatibility section HTML**
+
+```html
+<section class="section compatibility">
+  <div class="container">
+    <h2 class="text-center">macOS 15 (Tahoe) Compatibility</h2>
+    <p class="section-subtitle text-center">What works and what to watch out for</p>
+    <div class="compat-grid">
+      <div class="compat-card works">
+        <h3>✓ Works Out of the Box</h3>
+        <ul>
+          <li>Chrome, Firefox, Brave, Edge</li>
+          <li>Zoom, Slack, Teams, Google Meet</li>
+          <li>Netflix, YouTube, Spotify</li>
+          <li>Any raw IP connection</li>
+        </ul>
+      </div>
+      <div class="compat-card works">
+        <h3>✓ Now Fixed</h3>
+        <ul>
+          <li>Safari</li>
+          <li>App Store</li>
+          <li>System Software Updates</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Pages hanging?</strong> If you can ping 8.8.8.8 but websites won't load, your carrier may be dropping large packets. Fix:
+      <pre><code>sudo ifconfig utun6 mtu 1380</code></pre>
+    </div>
+  </div>
+</section>
+```
+
+- [ ] **Step 2: Add compatibility CSS**
+
+```css
+.compatibility h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.compat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 48px;
+  margin-bottom: 24px;
+}
+.compat-card {
+  padding: 32px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--gray-border);
+}
+.compat-card.works { border-left: 4px solid #34C759; }
+.compat-card h3 { font-size: 18px; margin-bottom: 16px; color: #34C759; }
+.compat-card ul { list-style: none; }
+.compat-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gray-light);
+  color: var(--gray-body);
+  font-size: 15px;
+}
+.compat-card li:last-child { border-bottom: none; }
+.compat-card li::before { content: "• "; color: var(--gray-body); }
+.callout {
+  background: #FFF8E1;
+  border: 1px solid #FFE082;
+  border-radius: var(--radius-card);
+  padding: 24px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.callout pre {
+  background: #1D1D1F;
+  color: #F5F5F7;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+  overflow-x: auto;
+  font-size: 13px;
+}
+.callout code { font-family: 'SF Mono', 'Fira Code', monospace; }
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add docs/index.html
+git commit -m "feat: add macOS 15 compatibility section with callout"
+```
+
+---
+
+### Task 8: Build the Security & Privacy section and Footer
+
+**Files:**
+- Modify: `docs/index.html`
+
+**Interfaces:**
+- Consumes: CSS variables from Task 1
+- Produces: Security section and footer with links
+
+- [ ] **Step 1: Add security section HTML**
+
+```html
+<section class="section security">
+  <div class="container text-center">
+    <h2>Built on Trust</h2>
+    <p class="section-subtitle">Zero telemetry. Local logs only. 100% auditable.</p>
+    <div class="security-points">
+      <div class="security-point">
+        <span class="check">✓</span>
+        <span>No data inspection — your traffic stays private</span>
+      </div>
+      <div class="security-point">
+        <span class="check">✓</span>
+        <span>No analytics or call-home functionality</span>
+      </div>
+      <div class="security-point">
+        <span class="check">✓</span>
+        <span>Fewer than 2,000 lines of auditable Go code</span>
+      </div>
+      <div class="security-point">
+        <span class="check">✓</span>
+        <span>MIT licensed — fully open source</span>
+      </div>
+    </div>
+  </div>
+</section>
+```
+
+- [ ] **Step 2: Add security CSS**
+
+```css
+.security { background: var(--gray-light); }
+.security h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.security-points {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 500px;
+  margin: 48px auto 0;
+}
+.security-point {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  text-align: left;
+}
+.check {
+  color: #34C759;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+```
+
+- [ ] **Step 3: Add footer HTML**
+
+```html
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-left">
+        <strong>BetterTether</strong>
+        <span>MIT License</span>
+      </div>
+      <div class="footer-right">
+        <a href="https://github.com/s4wbvnny/BetterTether" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/s4wbvnny/BetterTether/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+        <a href="https://github.com/s4wbvnny/BetterTether/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+```
+
+- [ ] **Step 4: Add footer CSS**
+
+```css
+.footer {
+  padding: 40px 0;
+  border-top: 1px solid var(--gray-border);
+}
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-left {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  color: var(--gray-body);
+  font-size: 14px;
+}
+.footer-right {
+  display: flex;
+  gap: 24px;
+}
+.footer-right a {
+  color: var(--gray-body);
+  text-decoration: none;
+  font-size: 14px;
+}
+.footer-right a:hover { color: var(--blue); }
+```
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add docs/index.html
+git commit -m "feat: add security section and footer"
+```
+
+---
+
+### Task 9: Final responsive polish and validation
+
+**Files:**
+- Modify: `docs/index.html`
+
+**Interfaces:**
+- Consumes: All sections from Tasks 2–8
+- Produces: Fully responsive, validated site
+
+- [ ] **Step 1: Add mobile responsive adjustments**
+
+```css
+@media (max-width: 768px) {
+  .hero { padding: 80px 0 40px; }
+  .hero h1 { font-size: 32px; }
+  .section { padding: 60px 0; }
+  .hero-cta { flex-direction: column; align-items: center; }
+  .footer-content { flex-direction: column; text-align: center; }
+  .footer-left { flex-direction: column; }
+}
+```
+
+- [ ] **Step 2: Validate HTML**
+
+Run: `python3 -c "from html.parser import HTMLParser; HTMLParser().feed(open('docs/index.html').read()); print('HTML is valid')"`
+Expected: `HTML is valid`
+
+- [ ] **Step 3: Check file size is reasonable**
+
+Run: `wc -c docs/index.html`
+Expected: Under 20KB
+
+- [ ] **Step 4: Final commit**
+
+```bash
+git add docs/index.html
+git commit -m "feat: add responsive breakpoints and final polish"
+```
+
+---
+
+### Task 10: Configure GitHub Pages
+
+**Files:**
+- Modify: None (GitHub repo settings)
+
+**Interfaces:**
+- Produces: GitHub Pages serving from `docs/` folder on `main` branch
+
+- [ ] **Step 1: Verify docs/index.html exists**
+
+Run: `ls -la docs/index.html`
+Expected: File exists
+
+- [ ] **Step 2: Enable GitHub Pages via GitHub CLI**
+
+Run: `gh api repos/s4wbvnny/BetterTether/pages -X POST -f build_type=legacy -f source.branch=main -f source.path=/docs 2>/dev/null || echo "Pages may already be enabled — configure manually in repo Settings > Pages > Source: main branch /docs folder"`
+Expected: Pages enabled or instructions to configure manually
+
+- [ ] **Step 3: Verify deployment**
+
+Run: `sleep 30 && curl -s -o /dev/null -w "%{http_code}" https://s4wbvnny.github.io/BetterTether/`
+Expected: `200`
