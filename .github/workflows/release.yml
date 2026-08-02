@@ -54,7 +54,7 @@ jobs:
 
   release-x64:
     name: Build x64 (Intel)
-    runs-on: macos-13
+    runs-on: macos-14
     permissions:
       contents: read
     steps:
@@ -67,14 +67,25 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install libusb pkg-config node
+          brew install pkg-config node
+
+      - name: Build x86_64 libusb from source
+        run: |
+          curl -sL https://github.com/libusb/libusb/releases/download/v1.0.30/libusb-1.0.30.tar.bz2 | tar xj
+          cd libusb-1.0.30
+          ./configure --host=x86_64-apple-darwin CC="clang -arch x86_64" --prefix=$HOME/libusb-x64
+          make -j$(sysctl -n hw.ncpu)
+          make install
 
       - name: Run tests
         run: go test -race ./...
 
       - name: Build x64 Go binary
         run: |
-          GOARCH=amd64 GOOS=darwin CGO_ENABLED=1 \
+          CC="clang -arch x86_64" \
+            CGO_CFLAGS="-I$HOME/libusb-x64/include/libusb-1.0" \
+            CGO_LDFLAGS="-L$HOME/libusb-x64/lib -lusb-1.0" \
+            GOARCH=amd64 GOOS=darwin CGO_ENABLED=1 \
             go build -ldflags="-X main.version=${{ github.ref_name }}" \
             -o build/bettertether ./cmd/bettertether
           GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 \
