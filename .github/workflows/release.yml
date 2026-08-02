@@ -6,12 +6,11 @@ on:
       - 'v*'
 
 jobs:
-  release:
-    name: Build and Release (Apple Silicon)
+  release-arm64:
+    name: Build arm64 (Apple Silicon)
     runs-on: macos-14
     permissions:
-      contents: write
-
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -20,27 +19,115 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Install dependencies (libusb + pkg-config + node)
+      - name: Install dependencies
         run: |
           brew install libusb pkg-config node
 
       - name: Run tests
         run: go test -race ./...
 
-      - name: Build .pkg installer (includes daemon + GUI .app)
-        run: make pkg
-
-      - name: Build DMG installers
+      - name: Build arm64 Go binary
         run: |
+          GOARCH=arm64 GOOS=darwin CGO_ENABLED=1 \
+            go build -ldflags="-X main.version=${{ github.ref_name }}" \
+            -o build/bettertether ./cmd/bettertether
+          GOARCH=arm64 GOOS=darwin CGO_ENABLED=0 \
+            go build -o build/bettertether-uninstall ./cmd/bettertether-uninstall
+
+      - name: Build arm64 DMG
+        run: |
+          mkdir -p gui/resources
+          cp build/bettertether gui/resources/bettertether
+          cp build/bettertether-uninstall gui/resources/bettertether-uninstall
+          cp launchd/com.s4wbvnny.bettertether.plist gui/resources/com.s4wbvnny.bettertether.plist
+          cp config/default.toml gui/resources/default.toml
           cd gui
           npm install
           npm run build
-          npx electron-builder --mac dmg --arm64 --x64
+          npx electron-builder --mac dmg --arm64
 
-      - name: Package signed binary tarball
+      - name: Upload arm64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm64-dmg
+          path: gui/dist/BetterTether-*-arm64.dmg
+
+  release-x64:
+    name: Build x64 (Intel)
+    runs-on: macos-13
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install dependencies
+        run: |
+          brew install libusb pkg-config node
+
+      - name: Run tests
+        run: go test -race ./...
+
+      - name: Build x64 Go binary
+        run: |
+          GOARCH=amd64 GOOS=darwin CGO_ENABLED=1 \
+            go build -ldflags="-X main.version=${{ github.ref_name }}" \
+            -o build/bettertether ./cmd/bettertether
+          GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 \
+            go build -o build/bettertether-uninstall ./cmd/bettertether-uninstall
+
+      - name: Build x64 DMG
+        run: |
+          mkdir -p gui/resources
+          cp build/bettertether gui/resources/bettertether
+          cp build/bettertether-uninstall gui/resources/bettertether-uninstall
+          cp launchd/com.s4wbvnny.bettertether.plist gui/resources/com.s4wbvnny.bettertether.plist
+          cp config/default.toml gui/resources/default.toml
+          cd gui
+          npm install
+          npm run build
+          npx electron-builder --mac dmg --x64
+
+      - name: Upload x64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: x64-dmg
+          path: gui/dist/BetterTether-*-x64.dmg
+
+  release:
+    name: Create Release
+    needs: [release-arm64, release-x64]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download arm64 DMG
+        uses: actions/download-artifact@v4
+        with:
+          name: arm64-dmg
+          path: gui/dist
+
+      - name: Download x64 DMG
+        uses: actions/download-artifact@v4
+        with:
+          name: x64-dmg
+          path: gui/dist
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Package signed binary tarball (arm64)
         run: |
           mkdir -p build
-          GOARCH=arm64 GOOS=darwin CGO_ENABLED=1 \
+          GOARCH=arm64 GOOS=darwin CGO_ENABLED=0 \
             go build -ldflags="-X main.version=${{ github.ref_name }}" \
             -o build/bettertether ./cmd/bettertether
           cd build && cp bettertether bettertether-darwin-arm64 && \
@@ -56,9 +143,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/BetterTether-*.pkg
-            build/bettertether-darwin-arm64.tar.gz
-            build/bettertether-darwin-arm64.tar.gz.sha256
             build/BetterTether-*.zip
             gui/dist/BetterTether-*-arm64.dmg
             gui/dist/BetterTether-*-x64.dmg

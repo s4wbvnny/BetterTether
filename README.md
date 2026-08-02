@@ -1,6 +1,6 @@
 # BetterTether
 
-**Seamless Android RNDIS USB tethering for Apple Silicon Macs.**
+**Seamless Android RNDIS USB tethering for macOS (Apple Silicon & Intel).**
 *No Kernel Extensions. No SIP Changes. No Reboots.*
 
 ![Downloads](https://img.shields.io/github/downloads/s4wbvnny/BetterTether/total?style=for-the-badge&color=green)
@@ -13,7 +13,7 @@ BetterTether is a lightweight userspace daemon that brings high-performance USB 
 ## Why BetterTether?
 
 - **Zero System Security Changes**: Unlike HoRNDIS, BetterTether runs entirely in userspace. You don't need to disable System Integrity Protection (SIP) or allow reduced security mode.
-- **Apple Silicon Native**: Built from the ground up for M1, M2, M3, M4 and M5 Macs.
+- **Universal macOS Support**: Native builds for both Apple Silicon (M1–M5) and Intel Macs.
 - **All Android Phones**: Handles dynamic MAC address randomization across all Android devices, not just Samsung.
 - **Plug & Play**: Automatically detects your phone, performs the handshake, and configures your Mac's routing/DNS instantly.
 - **Desktop GUI**: Native macOS app with power button, traffic stats, log viewer, settings panel (uninstall, clear logs), and system tray menu — quits cleanly without leaving the daemon running.
@@ -104,7 +104,7 @@ npm run build
 npx electron-builder --mac dmg --arm64 --x64
 ```
 
-DMGs will be in `gui/dist/`.
+DMGs will be in `gui/dist/`. Use the `--arm64` flag for Apple Silicon only, or `--x64` for Intel only.
 
 ---
 
@@ -165,3 +165,5 @@ Then relaunch BetterTether. Either method only needs to be done once after insta
 | Samsung Galaxy S24 | 16 (One UI 8.0) | MacBook M3 Pro | Tahoe |
 | Samsung Galaxy A55 | 16 (One UI 8.0) | MacBook M5 | Tahoe |
 | Samsung Galaxy s9 | 15 (DuhanROM 4.3) | MacBook M3 Pro | Tahoe |
+
+> **Intel Mac Support**: The x64 DMG includes a native Intel Go binary and runs natively on Intel Macs. No Rosetta required.

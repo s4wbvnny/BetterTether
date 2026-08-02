@@ -5,9 +5,9 @@ UNINSTALL    = bettertether-uninstall
 BUILD_DIR    = ./build
 CMD          = ./cmd/bettertether
 CMD_UNINSTALL = ./cmd/bettertether-uninstall
-GOARCH       = arm64
-GOOS         = darwin
-CGO          = 1
+GOARCH       ?= arm64
+GOOS         ?= darwin
+CGO          ?= 1
 
 # Suppress Apple Double (._) files during file operations
 export COPYFILE_DISABLE=1
@@ -152,8 +152,8 @@ app: gui-deps build-ui
 		fi; \
 	done
 	-rm -rf $(UI_APP_DIR) 2>/dev/null
-	# Pick the native arch .app (arm64 on Apple Silicon, x64 otherwise)
-	if [ -d "gui/dist/mac-arm64/BetterTether.app" ]; then \
+	# Pick the .app bundle matching GOARCH
+	if [ "$(GOARCH)" = "arm64" ]; then \
 		cp -R gui/dist/mac-arm64/BetterTether.app $(UI_APP_DIR); \
 	else \
 		cp -R gui/dist/mac/BetterTether.app $(UI_APP_DIR); \
