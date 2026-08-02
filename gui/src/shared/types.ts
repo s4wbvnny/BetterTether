@@ -32,4 +32,15 @@ export interface UpdateInfo {
   version: string
   url: string
   body: string
+  error: 'none' | 'http' | 'network'
+  downloadUrl: string
+  downloadSize: number
+}
+
+export interface UpdateProgress {
+  phase: 'download' | 'stage' | 'ready' | 'error'
+  percent: number
+  receivedBytes?: number
+  totalBytes?: number
+  message?: string
 }

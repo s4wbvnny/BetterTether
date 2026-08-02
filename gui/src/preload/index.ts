@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC } from '../shared/channels'
-import type { DaemonStatus, AppSettings, UpdateInfo } from '../shared/types'
+import type { DaemonStatus, AppSettings, UpdateInfo, UpdateProgress } from '../shared/types'
 
 const api = {
   getStatus: (): Promise<DaemonStatus> => ipcRenderer.invoke(IPC.GET_STATUS),
@@ -22,11 +22,14 @@ const api = {
   },
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke(IPC.GET_SETTINGS),
   setSettings: (s: AppSettings): Promise<void> => ipcRenderer.invoke(IPC.SET_SETTINGS, s),
-  checkForUpdates: (): Promise<UpdateInfo | null> => ipcRenderer.invoke(IPC.CHECK_FOR_UPDATES),
-  onUpdateInfo: (cb: (info: UpdateInfo) => void) => {
-    const handler = (_: any, info: UpdateInfo) => cb(info)
-    ipcRenderer.on(IPC.ON_UPDATE_INFO, handler)
-    return () => { ipcRenderer.removeListener(IPC.ON_UPDATE_INFO, handler) }
+  checkForUpdates: (): Promise<UpdateInfo> => ipcRenderer.invoke(IPC.CHECK_FOR_UPDATES),
+  downloadUpdate: (): Promise<void> => ipcRenderer.invoke(IPC.DOWNLOAD_UPDATE),
+  cancelUpdate: (): Promise<void> => ipcRenderer.invoke(IPC.CANCEL_UPDATE),
+  restartForUpdate: (): Promise<{ ok: boolean; error?: string }> => ipcRenderer.invoke(IPC.RESTART_FOR_UPDATE),
+  onUpdateProgress: (cb: (p: UpdateProgress) => void) => {
+    const handler = (_: any, p: UpdateProgress) => cb(p)
+    ipcRenderer.on(IPC.ON_UPDATE_PROGRESS, handler)
+    return () => { ipcRenderer.removeListener(IPC.ON_UPDATE_PROGRESS, handler) }
   },
 }
 

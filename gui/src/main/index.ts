@@ -1,11 +1,11 @@
 import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from 'electron'
-import { execFile } from 'child_process'
-import { join } from 'path'
-import { readFileSync, writeFileSync, existsSync } from 'fs'
-import { truncate } from 'fs/promises'
+import { execFile, spawn } from 'child_process'
+import { join, dirname, resolve } from 'path'
+import { createWriteStream, readFileSync, writeFileSync, existsSync } from 'fs'
+import { mkdir, readdir, rm, truncate } from 'fs/promises'
 import { promisify } from 'util'
 import { IPC } from '../shared/channels'
-import type { DaemonStatus, AppSettings, UpdateInfo } from '../shared/types'
+import type { DaemonStatus, AppSettings, UpdateInfo, UpdateProgress } from '../shared/types'
 
 const execFileAsync = promisify(execFile)
 const LOG_PATH = '/var/log/bettertether.log'
@@ -24,10 +24,6 @@ const DAEMON_PATH = '/usr/local/bin/bettertether'
 const UNINSTALL_PATH = '/usr/local/bin/bettertether-uninstall'
 const SETTINGS_PATH = join(app.getPath('userData'), 'settings.json')
 const GITHUB_REPO = 's4wbvnny/BetterTether'
-const UPDATE_CHECK_INTERVAL = 4 * 60 * 60 * 1000 // 4 hours
-
-let updateTimer: ReturnType<typeof setInterval> | null = null
-let latestUpdate: UpdateInfo | null = null
 
 function getCurrentVersion(): string {
   try {
@@ -51,47 +47,189 @@ function isNewerVersion(latest: string, current: string): boolean {
   return lPat > cPat
 }
 
-async function checkForUpdates(): Promise<void> {
+let lastUpdateInfo: UpdateInfo | null = null
+let activeDownload: { controller: AbortController; dest: string } | null = null
+
+function updateArch(): 'arm64' | 'x64' {
+  return process.arch === 'arm64' ? 'arm64' : 'x64'
+}
+
+function sendUpdateProgress(p: UpdateProgress) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(IPC.ON_UPDATE_PROGRESS, p)
+  }
+}
+
+async function checkForUpdates(): Promise<UpdateInfo> {
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
       headers: { 'Accept': 'application/vnd.github.v3+json' },
     })
-    if (!res.ok) return
+    if (!res.ok) return { available: false, version: '', url: '', body: '', error: 'http', downloadUrl: '', downloadSize: 0 }
 
     const data = await res.json()
     const tag: string = data.tag_name ?? ''
     const body: string = data.body ?? ''
     const htmlUrl: string = data.html_url ?? ''
 
-    if (!tag) return
+    if (!tag) return { available: false, version: '', url: '', body: '', error: 'none', downloadUrl: '', downloadSize: 0 }
+
+    const arch = updateArch()
+    const assets: Array<{ name?: string; size?: number; browser_download_url?: string }> = data.assets ?? []
+    const asset = assets.find((a) => a.name?.endsWith(`-${arch}.dmg`))
+    const downloadUrl = asset?.browser_download_url ?? ''
+    const downloadSize = asset?.size ?? 0
 
     const current = getCurrentVersion()
-    if (isNewerVersion(tag, current)) {
-      latestUpdate = { available: true, version: tag, url: htmlUrl, body }
-      console.log(`[update] new version available: ${tag} (current: ${current})`)
-    } else {
-      latestUpdate = { available: false, version: tag, url: htmlUrl, body }
-      console.log(`[update] up to date: ${current}`)
-    }
+    const available = isNewerVersion(tag, current)
+    console.log(`[update] check complete: latest=${tag} current=${current} available=${available} asset=${asset?.name ?? 'none'}`)
 
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send(IPC.ON_UPDATE_INFO, latestUpdate)
-    }
+    lastUpdateInfo = { available, version: tag, url: htmlUrl, body, error: 'none', downloadUrl, downloadSize }
+    return lastUpdateInfo
   } catch (e) {
     console.error('[update] check failed:', e)
+    return { available: false, version: '', url: '', body: '', error: 'network', downloadUrl: '', downloadSize: 0 }
   }
 }
 
-function startUpdateCheck() {
-  // Check once after 30 seconds (let app settle), then every 4 hours
-  setTimeout(checkForUpdates, 30_000)
-  updateTimer = setInterval(checkForUpdates, UPDATE_CHECK_INTERVAL)
+async function downloadUpdate(): Promise<void> {
+  if (activeDownload) return
+  if (!app.isPackaged) {
+    sendUpdateProgress({ phase: 'error', percent: 0, message: 'Updates are only available in the packaged app.' })
+    return
+  }
+  const info = lastUpdateInfo
+  if (!info || !info.available || !info.downloadUrl) {
+    sendUpdateProgress({ phase: 'error', percent: 0, message: 'No update download available.' })
+    return
+  }
+
+  const controller = new AbortController()
+  const dest = join(app.getPath('temp'), `BetterTether-${info.version}-${updateArch()}.dmg`)
+  activeDownload = { controller, dest }
+
+  try {
+    const res = await fetch(info.downloadUrl, { signal: controller.signal, redirect: 'follow' })
+    if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`)
+
+    const total = info.downloadSize || Number(res.headers.get('content-length')) || 0
+    const reader = res.body.getReader()
+    const file = createWriteStream(dest)
+    let received = 0
+    let prevPercent = -1
+
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      received += value.byteLength
+      file.write(Buffer.from(value))
+      const percent = total > 0 ? Math.min(99, Math.round((received / total) * 100)) : 0
+      if (percent !== prevPercent) {
+        prevPercent = percent
+        sendUpdateProgress({ phase: 'download', percent, receivedBytes: received, totalBytes: total })
+      }
+    }
+    await new Promise<void>((resolveWrite, rejectWrite) => {
+      file.on('error', rejectWrite)
+      file.end(() => resolveWrite())
+    })
+    activeDownload = null
+
+    await stageUpdate(dest, info)
+  } catch (e) {
+    activeDownload = null
+    await rm(dest, { force: true }).catch(() => {})
+    if ((e as Error)?.name === 'AbortError') {
+      sendUpdateProgress({ phase: 'error', percent: 0, message: 'Update cancelled.' })
+    } else {
+      console.error('[update] download failed:', e)
+      sendUpdateProgress({ phase: 'error', percent: 0, message: 'Update download failed.' })
+    }
+  }
 }
 
-function stopUpdateCheck() {
-  if (updateTimer) {
-    clearInterval(updateTimer)
-    updateTimer = null
+function execFileAsyncCmd(cmd: string, args: string[]): Promise<void> {
+  return new Promise((resolveExec, rejectExec) => {
+    execFile(cmd, args, { timeout: 180_000 }, (err) => (err ? rejectExec(err) : resolveExec()))
+  })
+}
+
+async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
+  sendUpdateProgress({ phase: 'stage', percent: 5, message: 'Preparing update…' })
+  const mountPoint = join(app.getPath('temp'), `bt-mount-${Date.now()}`)
+  const stagedDir = join(app.getPath('userData'), 'update-stage')
+
+  try {
+    await mkdir(mountPoint, { recursive: true })
+    await mkdir(stagedDir, { recursive: true })
+    sendUpdateProgress({ phase: 'stage', percent: 15, message: 'Mounting installer image…' })
+    await execFileAsyncCmd('hdiutil', ['attach', dmgPath, '-nobrowse', '-readonly', '-mountpoint', mountPoint])
+
+    const entries = await readdir(mountPoint)
+    const appEntry = entries.find((e) => e.endsWith('.app'))
+    if (!appEntry) throw new Error('No app bundle found in installer image')
+
+    const stagedApp = join(stagedDir, appEntry)
+    sendUpdateProgress({ phase: 'stage', percent: 35, message: 'Copying app bundle…' })
+    await rm(stagedApp, { recursive: true, force: true })
+    await execFileAsyncCmd('ditto', [join(mountPoint, appEntry), stagedApp])
+
+    if (!existsSync(join(stagedApp, 'Contents', 'MacOS'))) {
+      throw new Error('Staged app bundle is missing its executable')
+    }
+    sendUpdateProgress({ phase: 'stage', percent: 95, message: 'Finalizing…' })
+  } catch (e) {
+    console.error('[update] staging failed:', e)
+    sendUpdateProgress({ phase: 'error', percent: 0, message: 'Update configuration failed.' })
+    throw e
+  } finally {
+    try { await execFileAsyncCmd('hdiutil', ['detach', mountPoint]) } catch { /* ignore */ }
+    await rm(mountPoint, { recursive: true, force: true }).catch(() => {})
+    await rm(dmgPath, { force: true }).catch(() => {})
+  }
+  console.log(`[update] staged ${appEntry} (${info.version})`)
+  sendUpdateProgress({ phase: 'ready', percent: 100, message: 'Update ready. Restart BetterTether to apply.' })
+}
+
+async function restartForUpdate(): Promise<{ ok: boolean; error?: string }> {
+  const stagedDir = join(app.getPath('userData'), 'update-stage')
+  let appEntry = ''
+  try {
+    const entries = await readdir(stagedDir)
+    appEntry = entries.find((e) => e.endsWith('.app')) ?? ''
+  } catch {
+    return { ok: false, error: 'No staged update found.' }
+  }
+  if (!appEntry) return { ok: false, error: 'No staged update found.' }
+
+  const stagedApp = join(stagedDir, appEntry)
+  const currentApp = resolve(dirname(process.execPath), '..', '..')
+  const scriptPath = join(app.getPath('temp'), 'bt-update-install.sh')
+  const script = `#!/bin/bash
+APP="$1"
+STAGED="$2"
+PID="$3"
+while kill -0 "$PID" 2>/dev/null; do sleep 0.5; done
+rm -rf "$APP"
+ditto "$STAGED" "$APP"
+rm -rf "$(dirname "$STAGED")"
+open "$APP"
+`
+  writeFileSync(scriptPath, script, { mode: 0o755 })
+  const child = spawn('/bin/sh', [scriptPath, currentApp, stagedApp, String(process.pid)], {
+    detached: true,
+    stdio: 'ignore',
+  })
+  child.unref()
+  forceQuit = true
+  setTimeout(() => app.quit(), 300)
+  return { ok: true }
+}
+
+function cancelUpdate(): void {
+  if (activeDownload) {
+    activeDownload.controller.abort()
+    activeDownload = null
   }
 }
 
@@ -522,8 +660,16 @@ ipcMain.handle(IPC.UNINSTALL, async () => {
 ipcMain.handle(IPC.GET_SETTINGS, () => loadSettings())
 ipcMain.handle(IPC.SET_SETTINGS, (_e, s: AppSettings) => saveSettings(s))
 ipcMain.handle(IPC.CHECK_FOR_UPDATES, async () => {
-  await checkForUpdates()
-  return latestUpdate
+  return checkForUpdates()
+})
+ipcMain.handle(IPC.DOWNLOAD_UPDATE, async () => {
+  await downloadUpdate()
+})
+ipcMain.handle(IPC.CANCEL_UPDATE, () => {
+  cancelUpdate()
+})
+ipcMain.handle(IPC.RESTART_FOR_UPDATE, async () => {
+  return restartForUpdate()
 })
 
 app.on('before-quit', () => {
@@ -573,7 +719,6 @@ app.whenReady().then(() => {
   createTray()
   createWindow()
   startPolling()
-  startUpdateCheck()
 })
 
 app.on('activate', () => {
@@ -592,5 +737,4 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   stopPolling()
-  stopUpdateCheck()
 })
