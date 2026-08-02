@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { truncate } from 'fs/promises'
 import { promisify } from 'util'
 import { IPC } from '../shared/channels'
-import type { DaemonStatus, AppSettings } from '../shared/types'
+import type { DaemonStatus, AppSettings, UpdateInfo } from '../shared/types'
 
 const execFileAsync = promisify(execFile)
 const LOG_PATH = '/var/log/bettertether.log'
@@ -23,6 +23,77 @@ const PLIST_PATH = '/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist'
 const DAEMON_PATH = '/usr/local/bin/bettertether'
 const UNINSTALL_PATH = '/usr/local/bin/bettertether-uninstall'
 const SETTINGS_PATH = join(app.getPath('userData'), 'settings.json')
+const GITHUB_REPO = 's4wbvnny/BetterTether'
+const UPDATE_CHECK_INTERVAL = 4 * 60 * 60 * 1000 // 4 hours
+
+let updateTimer: ReturnType<typeof setInterval> | null = null
+let latestUpdate: UpdateInfo | null = null
+
+function getCurrentVersion(): string {
+  try {
+    return app.getVersion()
+  } catch {
+    return '0.0.0'
+  }
+}
+
+function parseSemver(v: string): [number, number, number] {
+  const match = v.replace(/^v/, '').match(/^(\d+)\.(\d+)\.(\d+)/)
+  if (!match) return [0, 0, 0]
+  return [parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10)]
+}
+
+function isNewerVersion(latest: string, current: string): boolean {
+  const [lMaj, lMin, lPat] = parseSemver(latest)
+  const [cMaj, cMin, cPat] = parseSemver(current)
+  if (lMaj !== cMaj) return lMaj > cMaj
+  if (lMin !== cMin) return lMin > cMin
+  return lPat > cPat
+}
+
+async function checkForUpdates(): Promise<void> {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+      headers: { 'Accept': 'application/vnd.github.v3+json' },
+    })
+    if (!res.ok) return
+
+    const data = await res.json()
+    const tag: string = data.tag_name ?? ''
+    const body: string = data.body ?? ''
+    const htmlUrl: string = data.html_url ?? ''
+
+    if (!tag) return
+
+    const current = getCurrentVersion()
+    if (isNewerVersion(tag, current)) {
+      latestUpdate = { available: true, version: tag, url: htmlUrl, body }
+      console.log(`[update] new version available: ${tag} (current: ${current})`)
+    } else {
+      latestUpdate = { available: false, version: tag, url: htmlUrl, body }
+      console.log(`[update] up to date: ${current}`)
+    }
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(IPC.ON_UPDATE_INFO, latestUpdate)
+    }
+  } catch (e) {
+    console.error('[update] check failed:', e)
+  }
+}
+
+function startUpdateCheck() {
+  // Check once after 30 seconds (let app settle), then every 4 hours
+  setTimeout(checkForUpdates, 30_000)
+  updateTimer = setInterval(checkForUpdates, UPDATE_CHECK_INTERVAL)
+}
+
+function stopUpdateCheck() {
+  if (updateTimer) {
+    clearInterval(updateTimer)
+    updateTimer = null
+  }
+}
 
 function loadSettings(): AppSettings {
   try {
@@ -450,6 +521,10 @@ ipcMain.handle(IPC.UNINSTALL, async () => {
 })
 ipcMain.handle(IPC.GET_SETTINGS, () => loadSettings())
 ipcMain.handle(IPC.SET_SETTINGS, (_e, s: AppSettings) => saveSettings(s))
+ipcMain.handle(IPC.CHECK_FOR_UPDATES, async () => {
+  await checkForUpdates()
+  return latestUpdate
+})
 
 app.on('before-quit', () => {
   systemQuit = !forceQuit
@@ -498,6 +573,7 @@ app.whenReady().then(() => {
   createTray()
   createWindow()
   startPolling()
+  startUpdateCheck()
 })
 
 app.on('activate', () => {
@@ -516,4 +592,5 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   stopPolling()
+  stopUpdateCheck()
 })

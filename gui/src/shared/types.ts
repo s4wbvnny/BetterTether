@@ -26,3 +26,10 @@ export interface DaemonStatus {
 export interface AppSettings {
   quitFromDockQuitsApp: boolean
 }
+
+export interface UpdateInfo {
+  available: boolean
+  version: string
+  url: string
+  body: string
+}

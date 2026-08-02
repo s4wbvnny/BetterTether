@@ -1,4 +1,4 @@
-# BetterTether — Version 0.8.10
+# BetterTether — Version 0.9.1
 
 One entry per git push. Semantic versioning (MAJOR.MINOR.PATCH).
 - PATCH: bug fix, refactor, docs
@@ -9,6 +9,12 @@ Pre-release: all versions are v0.x.x until `brew install bettertether` works end
 v1.0.0 = MVP complete and working on M1/M2/M3.
 
 ---
+
+## v0.9.1 — 2026-08-02
+- What's new: In-app update checker — Settings panel shows when a newer version is available with a direct download link
+- What's new: Fixed x64 (Intel Mac) builds — Go daemon is now compiled on a native x64 runner (`macos-13`) instead of cross-compiled
+- What's fixed: Makefile `GOARCH` is now overridable; release workflow uses separate jobs per architecture
+- Next: Homebrew tap, v1.0.0 public release.
 
 ## v0.9.0 — 2026-07-30
 - Milestone: Electron GUI with settings panel, traffic monitor, and system tray

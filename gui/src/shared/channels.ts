@@ -10,4 +10,6 @@ export const IPC = {
   UNINSTALL: 'bt:uninstall',
   GET_SETTINGS: 'bt:get-settings',
   SET_SETTINGS: 'bt:set-settings',
+  CHECK_FOR_UPDATES: 'bt:check-for-updates',
+  ON_UPDATE_INFO: 'bt:on-update-info',
 } as const

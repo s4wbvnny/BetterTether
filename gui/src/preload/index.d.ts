@@ -1,4 +1,4 @@
-import type { DaemonStatus, AppSettings } from '../shared/types'
+import type { DaemonStatus, AppSettings, UpdateInfo } from '../shared/types'
 
 declare global {
   interface Window {
@@ -14,6 +14,8 @@ declare global {
       onPollLogs: (cb: (logs: string) => void) => () => void
       getSettings: () => Promise<AppSettings>
       setSettings: (s: AppSettings) => Promise<void>
+      checkForUpdates: () => Promise<UpdateInfo | null>
+      onUpdateInfo: (cb: (info: UpdateInfo) => void) => () => void
     }
   }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { AppSettings } from '../../../shared/types'
+import type { AppSettings, UpdateInfo } from '../../../shared/types'
 
 interface Props {
   visible: boolean
@@ -8,12 +8,19 @@ interface Props {
 
 export function SettingsPanel({ visible }: Props) {
   const [settings, setSettings] = useState<AppSettings>({ quitFromDockQuitsApp: false })
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
 
   useEffect(() => {
     if (visible) {
       window.bettertether.getSettings().then(setSettings)
     }
   }, [visible])
+
+  useEffect(() => {
+    const unsub = window.bettertether.onUpdateInfo(setUpdateInfo)
+    window.bettertether.checkForUpdates()
+    return unsub
+  }, [])
 
   const toggle = async () => {
     const next = { ...settings, quitFromDockQuitsApp: !settings.quitFromDockQuitsApp }
@@ -38,6 +45,23 @@ export function SettingsPanel({ visible }: Props) {
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+            {updateInfo?.available && (
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <div className="flex flex-col">
+                  <span className="text-[13px] text-zinc-200">Update available: {updateInfo.version}</span>
+                  <span className="text-[11px] text-zinc-500">A newer version of BetterTether is ready</span>
+                </div>
+                <a
+                  href={updateInfo.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[12px] font-medium text-emerald-400 hover:text-emerald-300 underline underline-offset-2 cursor-pointer shrink-0 ml-3"
+                >
+                  Download
+                </a>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="text-[13px] text-zinc-200">Keep in system tray</span>
