@@ -34,6 +34,13 @@ jobs:
           GOARCH=arm64 GOOS=darwin CGO_ENABLED=0 \
             go build -o build/bettertether-uninstall ./cmd/bettertether-uninstall
 
+      - name: Package arm64 tarball
+        run: |
+          cd build && cp bettertether bettertether-darwin-arm64 && \
+            tar czf bettertether-darwin-arm64.tar.gz bettertether-darwin-arm64
+          rm -f build/bettertether-darwin-arm64
+          cd build && shasum -a 256 bettertether-darwin-arm64.tar.gz > bettertether-darwin-arm64.tar.gz.sha256
+
       - name: Build arm64 DMG
         run: |
           mkdir -p gui/resources
@@ -49,8 +56,11 @@ jobs:
       - name: Upload arm64 artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: arm64-dmg
-          path: gui/dist/BetterTether-*-arm64.dmg
+          name: arm64-builds
+          path: |
+            gui/dist/BetterTether-*-arm64.dmg
+            build/bettertether-darwin-arm64.tar.gz
+            build/bettertether-darwin-arm64.tar.gz.sha256
 
   release-x64:
     name: Build x64 (Intel)
@@ -91,6 +101,13 @@ jobs:
           GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 \
             go build -o build/bettertether-uninstall ./cmd/bettertether-uninstall
 
+      - name: Package x64 tarball
+        run: |
+          cd build && cp bettertether bettertether-darwin-x64 && \
+            tar czf bettertether-darwin-x64.tar.gz bettertether-darwin-x64
+          rm -f build/bettertether-darwin-x64
+          cd build && shasum -a 256 bettertether-darwin-x64.tar.gz > bettertether-darwin-x64.tar.gz.sha256
+
       - name: Build x64 DMG
         run: |
           mkdir -p gui/resources
@@ -106,8 +123,11 @@ jobs:
       - name: Upload x64 artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: x64-dmg
-          path: gui/dist/BetterTether-*-x64.dmg
+          name: x64-builds
+          path: |
+            gui/dist/BetterTether-*-x64.dmg
+            build/bettertether-darwin-x64.tar.gz
+            build/bettertether-darwin-x64.tar.gz.sha256
 
   release:
     name: Create Release
@@ -118,57 +138,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download arm64 DMG
+      - name: Download arm64 builds
         uses: actions/download-artifact@v4
         with:
-          name: arm64-dmg
-          path: gui/dist
+          name: arm64-builds
+          path: dist
 
-      - name: Download x64 DMG
+      - name: Download x64 builds
         uses: actions/download-artifact@v4
         with:
-          name: x64-dmg
-          path: gui/dist
+          name: x64-builds
+          path: dist
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-
-      - name: Package signed binary tarball (arm64)
+      - name: Restructure dist for release
         run: |
-          mkdir -p build
-          GOARCH=arm64 GOOS=darwin CGO_ENABLED=0 \
-            go build -ldflags="-X main.version=${{ github.ref_name }}" \
-            -o build/bettertether ./cmd/bettertether
-          cd build && cp bettertether bettertether-darwin-arm64 && \
-            tar czf bettertether-darwin-arm64.tar.gz bettertether-darwin-arm64
-          rm -f bettertether-darwin-arm64
-          shasum -a 256 bettertether-darwin-arm64.tar.gz > bettertether-darwin-arm64.tar.gz.sha256
-
-      - name: Package signed binary tarball (x64)
-        run: |
-          GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 \
-            go build -ldflags="-X main.version=${{ github.ref_name }}" \
-            -o build/bettertether-x64 ./cmd/bettertether
-          cd build && cp bettertether-x64 bettertether-darwin-x64 && \
-            tar czf bettertether-darwin-x64.tar.gz bettertether-darwin-x64
-          rm -f bettertether-darwin-x64 bettertether-x64
-          shasum -a 256 bettertether-darwin-x64.tar.gz > bettertether-darwin-x64.tar.gz.sha256
-
-      - name: Archive source code
-        run: |
-          git archive --format=zip -o build/BetterTether-${{ github.ref_name }}.zip HEAD
+          mkdir -p release
+          mv dist/BetterTether-*-arm64.dmg release/ 2>/dev/null || true
+          mv dist/BetterTether-*-x64.dmg release/ 2>/dev/null || true
+          mv dist/bettertether-darwin-arm64.tar.gz release/ 2>/dev/null || true
+          mv dist/bettertether-darwin-arm64.tar.gz.sha256 release/ 2>/dev/null || true
+          mv dist/bettertether-darwin-x64.tar.gz release/ 2>/dev/null || true
+          mv dist/bettertether-darwin-x64.tar.gz.sha256 release/ 2>/dev/null || true
+          git archive --format=zip -o release/BetterTether-${{ github.ref_name }}.zip HEAD
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/BetterTether-*.zip
-            build/bettertether-darwin-arm64.tar.gz
-            build/bettertether-darwin-arm64.tar.gz.sha256
-            build/bettertether-darwin-x64.tar.gz
-            build/bettertether-darwin-x64.tar.gz.sha256
-            gui/dist/BetterTether-*-arm64.dmg
-            gui/dist/BetterTether-*-x64.dmg
+            release/BetterTether-*.zip
+            release/bettertether-darwin-arm64.tar.gz
+            release/bettertether-darwin-arm64.tar.gz.sha256
+            release/bettertether-darwin-x64.tar.gz
+            release/bettertether-darwin-x64.tar.gz.sha256
+            release/BetterTether-*-arm64.dmg
+            release/BetterTether-*-x64.dmg
           generate_release_notes: true

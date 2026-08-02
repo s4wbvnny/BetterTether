@@ -93,10 +93,6 @@ class BetterTether < Formula
             <string>--config</string>
             <string>#{etc}/bettertether/bettertether.toml</string>
           </array>
-          <key>RunAtLoad</key>
-          <true/>
-          <key>KeepAlive</key>
-          <true/>
           <key>StandardOutPath</key>
           <string>/var/log/bettertether.log</string>
           <key>StandardErrorPath</key>
