@@ -121,6 +121,13 @@ jobs:
           ls -la build/
           file build/bettertether
           file build/bettertether-uninstall
+          echo "=== Step 5: Point libusb dep at standard Intel Homebrew path ==="
+          otool -L build/bettertether | grep -i libusb
+          install_name_tool -change \
+            "$HOME/libusb-x64/lib/libusb-1.0.0.dylib" \
+            /usr/local/opt/libusb/lib/libusb-1.0.0.dylib \
+            build/bettertether
+          otool -L build/bettertether | grep -i libusb
 
       - name: Package x64 tarball
         run: |
