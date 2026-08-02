@@ -5,7 +5,13 @@ UNINSTALL    = bettertether-uninstall
 BUILD_DIR    = ./build
 CMD          = ./cmd/bettertether
 CMD_UNINSTALL = ./cmd/bettertether-uninstall
-GOARCH       ?= arm64
+# Auto-detect host architecture if not specified
+UNAME_M      := $(shell uname -m)
+ifeq ($(UNAME_M),arm64)
+  GOARCH     ?= arm64
+else
+  GOARCH     ?= amd64
+endif
 GOOS         ?= darwin
 CGO          ?= 1
 

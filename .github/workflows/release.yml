@@ -135,6 +135,16 @@ jobs:
           rm -f bettertether-darwin-arm64
           shasum -a 256 bettertether-darwin-arm64.tar.gz > bettertether-darwin-arm64.tar.gz.sha256
 
+      - name: Package signed binary tarball (x64)
+        run: |
+          GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 \
+            go build -ldflags="-X main.version=${{ github.ref_name }}" \
+            -o build/bettertether-x64 ./cmd/bettertether
+          cd build && cp bettertether-x64 bettertether-darwin-x64 && \
+            tar czf bettertether-darwin-x64.tar.gz bettertether-darwin-x64
+          rm -f bettertether-darwin-x64 bettertether-x64
+          shasum -a 256 bettertether-darwin-x64.tar.gz > bettertether-darwin-x64.tar.gz.sha256
+
       - name: Archive source code
         run: |
           git archive --format=zip -o build/BetterTether-${{ github.ref_name }}.zip HEAD
@@ -144,6 +154,10 @@ jobs:
         with:
           files: |
             build/BetterTether-*.zip
+            build/bettertether-darwin-arm64.tar.gz
+            build/bettertether-darwin-arm64.tar.gz.sha256
+            build/bettertether-darwin-x64.tar.gz
+            build/bettertether-darwin-x64.tar.gz.sha256
             gui/dist/BetterTether-*-arm64.dmg
             gui/dist/BetterTether-*-x64.dmg
           generate_release_notes: true
