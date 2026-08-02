@@ -28,18 +28,30 @@ jobs:
 
       - name: Build arm64 Go binary
         run: |
+          set -ex
+          echo "=== Step 1: Create build dir ==="
+          mkdir -p build
+          echo "=== Step 2: Build main binary ==="
           GOARCH=arm64 GOOS=darwin CGO_ENABLED=1 \
-            go build -ldflags="-X main.version=${{ github.ref_name }}" \
+            go build -v -ldflags="-X main.version=${{ github.ref_name }}" \
             -o build/bettertether ./cmd/bettertether
+          echo "=== Step 3: Build uninstall binary ==="
           GOARCH=arm64 GOOS=darwin CGO_ENABLED=0 \
-            go build -o build/bettertether-uninstall ./cmd/bettertether-uninstall
+            go build -v -o build/bettertether-uninstall ./cmd/bettertether-uninstall
+          echo "=== Step 4: Verify build output ==="
+          ls -la build/
+          file build/bettertether
+          file build/bettertether-uninstall
 
       - name: Package arm64 tarball
         run: |
-          cd build && cp bettertether bettertether-darwin-arm64 && \
-            tar czf bettertether-darwin-arm64.tar.gz bettertether-darwin-arm64
+          echo "=== Debug: pwd ===" && pwd
+          echo "=== Debug: ls build/ ===" && ls -la build/
+          cp build/bettertether build/bettertether-darwin-arm64
+          tar czf build/bettertether-darwin-arm64.tar.gz -C build bettertether-darwin-arm64
           rm -f build/bettertether-darwin-arm64
-          cd build && shasum -a 256 bettertether-darwin-arm64.tar.gz > bettertether-darwin-arm64.tar.gz.sha256
+          shasum -a 256 build/bettertether-darwin-arm64.tar.gz > build/bettertether-darwin-arm64.tar.gz.sha256
+          echo "=== Debug: ls build/ after ===" && ls -la build/
 
       - name: Build arm64 DMG
         run: |
@@ -92,21 +104,34 @@ jobs:
 
       - name: Build x64 Go binary
         run: |
+          set -ex
+          echo "=== Step 1: Create build dir ==="
+          mkdir -p build
+          echo "=== Step 2: Build main binary ==="
           CC="clang -arch x86_64" \
             CGO_CFLAGS="-I$HOME/libusb-x64/include/libusb-1.0" \
             CGO_LDFLAGS="-L$HOME/libusb-x64/lib -lusb-1.0" \
             GOARCH=amd64 GOOS=darwin CGO_ENABLED=1 \
-            go build -ldflags="-X main.version=${{ github.ref_name }}" \
+            go build -v -ldflags="-X main.version=${{ github.ref_name }}" \
             -o build/bettertether ./cmd/bettertether
+          echo "=== Step 3: Build uninstall binary ==="
           GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 \
-            go build -o build/bettertether-uninstall ./cmd/bettertether-uninstall
+            go build -v -o build/bettertether-uninstall ./cmd/bettertether-uninstall
+          echo "=== Step 4: Verify build output ==="
+          ls -la build/
+          file build/bettertether
+          file build/bettertether-uninstall
 
       - name: Package x64 tarball
         run: |
-          cd build && cp bettertether bettertether-darwin-x64 && \
-            tar czf bettertether-darwin-x64.tar.gz bettertether-darwin-x64
+          echo "=== Debug: listing build dir ==="
+          ls -la build/
+          echo "=== Debug: pwd ==="
+          pwd
+          cp build/bettertether build/bettertether-darwin-x64
+          tar czf build/bettertether-darwin-x64.tar.gz -C build bettertether-darwin-x64
           rm -f build/bettertether-darwin-x64
-          cd build && shasum -a 256 bettertether-darwin-x64.tar.gz > bettertether-darwin-x64.tar.gz.sha256
+          shasum -a 256 build/bettertether-darwin-x64.tar.gz > build/bettertether-darwin-x64.tar.gz.sha256
 
       - name: Build x64 DMG
         run: |
