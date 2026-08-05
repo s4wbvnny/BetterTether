@@ -1,4 +1,4 @@
-# BetterTether — Version 0.9.1
+# BetterTether — Version 0.9.0
 
 One entry per git push. Semantic versioning (MAJOR.MINOR.PATCH).
 - PATCH: bug fix, refactor, docs
@@ -10,15 +10,10 @@ v1.0.0 = MVP complete and working on M1/M2/M3.
 
 ---
 
-## v0.9.1 — 2026-08-02
-- What's new: In-app update checker — Settings panel shows when a newer version is available with a direct download link
-- What's new: Fixed x64 (Intel Mac) builds — Go daemon is now compiled on a native x64 runner (`macos-13`) instead of cross-compiled
-- What's fixed: Makefile `GOARCH` is now overridable; release workflow uses separate jobs per architecture
-- Next: Homebrew tap, v1.0.0 public release.
-
-## v0.9.0 — 2026-07-30
+## v0.9.0 — 2026-08-02
 - Milestone: Electron GUI with settings panel, traffic monitor, and system tray
 - What's new: Full-featured Electron desktop app with React + TypeScript frontend. HTTP API server (port 9400) for daemon communication. Settings panel with "Keep in system tray" toggle and uninstall button. Live traffic stats (up/down speed, total data, connection status). Live log viewer. Tray icon with "Show Window" and "Quit" context menu. Trash detection — moving .app to Trash auto-runs full uninstall.
+- What's new: Fixed x64 (Intel Mac) builds — Go daemon is now compiled on a native x64 runner (`macos-13`) instead of cross-compiled. Makefile `GOARCH` is now overridable; release workflow uses separate jobs per architecture.
 - Daemon: New `[api]` config section enables/disables the HTTP API server. Daemon tracks relay state for API stats reporting.
 - What's fixed: Tray icon click no longer opens window (intentional — only "Show Window" from context menu). Simplified tray menu to two items.
 - Next: Homebrew tap, v1.0.0 public release.

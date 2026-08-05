@@ -288,6 +288,8 @@ ${cpUninstall}
 mkdir -p /usr/local/bin
 cp -f '${binaryRes}' ${DAEMON_PATH}
 chmod +x ${DAEMON_PATH}
+xattr -dr com.apple.quarantine ${DAEMON_PATH} 2>/dev/null || true
+xattr -dr com.apple.quarantine ${UNINSTALL_PATH} 2>/dev/null || true
 cp -f '${plistRes}' ${PLIST_PATH}
 chmod 644 ${PLIST_PATH}
 chown root:wheel ${PLIST_PATH}
