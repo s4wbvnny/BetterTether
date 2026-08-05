@@ -169,4 +169,4 @@ Then relaunch BetterTether. Either method only needs to be done once after insta
 | Samsung Galaxy A55 | 16 (One UI 8.0) | MacBook M5 | Tahoe |
 | Samsung Galaxy s9 | 15 (DuhanROM 4.3) | MacBook M3 Pro | Tahoe |
 
-> **Intel Mac Support**: The x64 DMG includes a native Intel Go binary and runs natively on Intel Macs. No Rosetta required.
+> **Intel Mac Support**: The x64 DMG includes a native Intel Go binary and runs natively on Intel Macs.
