@@ -9,6 +9,9 @@
 BetterTether is a lightweight userspace daemon that brings high-performance USB tethering to macOS by implementing the RNDIS protocol via `libusb` and routing traffic through the native `utun` interface. It ships with a native macOS desktop app for controlling the daemon, monitoring traffic, and viewing logs from the menu bar.
 
 ---
+<div align="center"><img width="448" height="655" alt="image" src="https://github.com/user-attachments/assets/18a5b269-0b83-4102-8728-980d5fd85453" /></div>
+
+---
 
 ## Why BetterTether?
 
