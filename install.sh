@@ -79,6 +79,7 @@ echo "→ Starting daemon..."
 if ! /bin/launchctl bootstrap system "$PLIST_DST" 2>/dev/null; then
     /bin/launchctl load -w "$PLIST_DST" 2>/dev/null || true
 fi
+/bin/launchctl kickstart -k system/com.s4wbvnny.bettertether 2>/dev/null || true
 
 echo ""
 echo "✓ BetterTether installed!"

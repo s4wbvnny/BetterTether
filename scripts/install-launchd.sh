@@ -36,5 +36,6 @@ rm -f "$TMP"
 echo "→ Loading daemon"
 sudo launchctl bootout system "$DEST" 2>/dev/null || true
 sudo launchctl bootstrap system "$DEST"
+sudo launchctl kickstart -k system/com.s4wbvnny.bettertether 2>/dev/null || true
 
 echo "✓ launchd installed and loaded"

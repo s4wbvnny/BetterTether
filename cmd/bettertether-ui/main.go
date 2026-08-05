@@ -96,7 +96,7 @@ func toggle() {
 
 	if start {
 		exec.Command("osascript", "-e",
-			fmt.Sprintf(`do shell script "/bin/launchctl bootstrap system %s" with administrator privileges`, plistPath)).Run()
+			fmt.Sprintf(`do shell script "/bin/launchctl bootstrap system %s && /bin/launchctl kickstart -k system/com.s4wbvnny.bettertether" with administrator privileges`, plistPath)).Run()
 	} else {
 		exec.Command("osascript", "-e",
 			fmt.Sprintf(`do shell script "/bin/launchctl bootout system %s" with administrator privileges`, plistPath)).Run()
