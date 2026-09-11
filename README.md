@@ -144,7 +144,7 @@ macOS Gatekeeper blocks apps downloaded from the internet that aren't signed wit
 1. Go to **System Settings → Privacy & Security**.
 2. Scroll down to the **Security** section.
 3. Click **Open Anyway** next the BetterTether message.
-4. Enter your password.
+4. Authorize using your biometrics or password.
 
 Alternatively, you can clear the quarantine flag from the terminal:
 ```bash
