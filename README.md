@@ -152,6 +152,14 @@ sudo xattr -rd com.apple.quarantine /Applications/BetterTether.app
 ```
 Then relaunch BetterTether. Either method only needs to be done once after installing from a DMG download.
 
+### "Missing libusb on first launch"
+If you should encounter this error on your first launch the command below is an easy fix:
+```
+brew install libusb
+```
+
+Launch the app again and enjoy!
+
 ---
 
 ## Community
