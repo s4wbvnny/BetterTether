@@ -294,7 +294,7 @@ cp -f '${plistRes}' ${PLIST_PATH}
 chmod 644 ${PLIST_PATH}
 chown root:wheel ${PLIST_PATH}
 /bin/launchctl bootout system/${PLIST_LABEL} 2>/dev/null || true
-/bin/launchctl bootstrap system '${PLIST_PATH}'
+/bin/launchctl bootstrap system '${PLIST_PATH}' 2>/dev/null || true
 /bin/launchctl kickstart -k system/${PLIST_LABEL} 2>/dev/null || true
 " with administrator privileges`
 

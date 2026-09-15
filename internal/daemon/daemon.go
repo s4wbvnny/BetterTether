@@ -237,7 +237,7 @@ func (d *Daemon) StartDaemon() error {
 		return nil
 	}
 	cmd := exec.Command("osascript", "-e",
-		fmt.Sprintf(`do shell script "/bin/launchctl bootstrap system %s && /bin/launchctl kickstart -k system/com.s4wbvnny.bettertether" with administrator privileges`, d.plistPath))
+		fmt.Sprintf(`do shell script "/bin/launchctl bootstrap system %s 2>/dev/null; /bin/launchctl kickstart -k system/com.s4wbvnny.bettertether 2>/dev/null || true" with administrator privileges`, d.plistPath))
 	return cmd.Run()
 }
 
