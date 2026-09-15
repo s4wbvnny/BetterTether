@@ -158,21 +158,26 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
   sendUpdateProgress({ phase: 'stage', percent: 5, message: 'Preparing update…' })
   const mountPoint = join(app.getPath('temp'), `bt-mount-${Date.now()}`)
   const stagedDir = join(app.getPath('userData'), 'update-stage')
+  let appEntry = ''
 
   try {
     await mkdir(mountPoint, { recursive: true })
     await mkdir(stagedDir, { recursive: true })
+
     sendUpdateProgress({ phase: 'stage', percent: 15, message: 'Mounting installer image…' })
-    await execFileAsyncCmd('hdiutil', ['attach', dmgPath, '-nobrowse', '-readonly', '-mountpoint', mountPoint])
+    const mountScript = `do shell script "xattr -dr com.apple.quarantine '${dmgPath}' 2>/dev/null || true
+/sbin/hdiutil attach '${dmgPath}' -nobrowse -readonly -mountpoint '${mountPoint}'" with administrator privileges`
+    await execFileAsync('osascript', ['-e', mountScript], { timeout: 60_000 })
 
     const entries = await readdir(mountPoint)
-    const appEntry = entries.find((e) => e.endsWith('.app'))
+    appEntry = entries.find((e) => e.endsWith('.app')) ?? ''
     if (!appEntry) throw new Error('No app bundle found in installer image')
 
     const stagedApp = join(stagedDir, appEntry)
     sendUpdateProgress({ phase: 'stage', percent: 35, message: 'Copying app bundle…' })
-    await rm(stagedApp, { recursive: true, force: true })
-    await execFileAsyncCmd('ditto', [join(mountPoint, appEntry), stagedApp])
+    await rm(stagedApp, { recursive: true, force: true }).catch(() => {})
+    const copyScript = `do shell script "/usr/bin/ditto '${join(mountPoint, appEntry)}' '${stagedApp}'" with administrator privileges`
+    await execFileAsync('osascript', ['-e', copyScript], { timeout: 120_000 })
 
     if (!existsSync(join(stagedApp, 'Contents', 'MacOS'))) {
       throw new Error('Staged app bundle is missing its executable')
@@ -183,8 +188,9 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
     sendUpdateProgress({ phase: 'error', percent: 0, message: 'Update configuration failed.' })
     throw e
   } finally {
-    try { await execFileAsyncCmd('hdiutil', ['detach', mountPoint]) } catch { /* ignore */ }
-    await rm(mountPoint, { recursive: true, force: true }).catch(() => {})
+    const detachScript = `do shell script "/sbin/hdiutil detach '${mountPoint}' 2>/dev/null || true
+rm -rf '${mountPoint}'" with administrator privileges`
+    await execFileAsync('osascript', ['-e', detachScript], { timeout: 30_000 }).catch(() => {})
     await rm(dmgPath, { force: true }).catch(() => {})
   }
   console.log(`[update] staged ${appEntry} (${info.version})`)
@@ -216,7 +222,8 @@ rm -rf "$(dirname "$STAGED")"
 open "$APP"
 `
   writeFileSync(scriptPath, script, { mode: 0o755 })
-  const child = spawn('/bin/sh', [scriptPath, currentApp, stagedApp, String(process.pid)], {
+  const osaScript = `do shell script "nohup /bin/sh '${scriptPath}' '${currentApp}' '${stagedApp}' '${process.pid}' >/dev/null 2>&1 &" with administrator privileges`
+  const child = spawn('osascript', ['-e', osaScript], {
     detached: true,
     stdio: 'ignore',
   })
