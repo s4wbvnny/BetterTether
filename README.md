@@ -4,9 +4,18 @@
 *No Kernel Extensions. No SIP Changes. No Reboots.*
 
 ![Downloads](https://img.shields.io/github/downloads/s4wbvnny/BetterTether/total?style=for-the-badge&color=green)
+![Downloads](https://img.shields.io/github/downloads/s4wbvnny/BetterTether/v0.9.1?style=for-the-badge&color=blue)
+![Downloads](https://img.shields.io/github/downloads/s4wbvnny/BetterTether/v0.9.0?style=for-the-badge&color=yellow)
 ![Status](https://img.shields.io/github/v/release/s4wbvnny/BetterTether?style=for-the-badge&color=blue)
 
 BetterTether is a lightweight userspace daemon that brings high-performance USB tethering to macOS by implementing the RNDIS protocol via `libusb` and routing traffic through the native `utun` interface. It ships with a native macOS desktop app for controlling the daemon, monitoring traffic, and viewing logs from the menu bar.
+
+### Download Stats
+
+| Release | arm64 (Apple Silicon) | x64 (Intel) | Total |
+|---------|----------------------|-------------|-------|
+| [v0.9.1](https://github.com/s4wbvnny/BetterTether/releases/tag/v0.9.1) | [![arm64](https://img.shields.io/github/downloads/s4wbvnny/BetterTether/BetterTether-0.9.1-arm64.dmg?label=arm64)](https://github.com/s4wbvnny/BetterTether/releases/download/v0.9.1/BetterTether-0.9.1-arm64.dmg) | [![x64](https://img.shields.io/github/downloads/s4wbvnny/BetterTether/BetterTether-0.9.1-x64.dmg?label=x64)](https://github.com/s4wbvnny/BetterTether/releases/download/v0.9.1/BetterTether-0.9.1-x64.dmg) | [![total](https://img.shields.io/github/downloads/s4wbvnny/BetterTether/v0.9.1?label=total)](https://github.com/s4wbvnny/BetterTether/releases/tag/v0.9.1) |
+| [v0.9.0](https://github.com/s4wbvnny/BetterTether/releases/tag/v0.9.0) | [![arm64](https://img.shields.io/github/downloads/s4wbvnny/BetterTether/BetterTether-0.9.0-arm64.dmg?label=arm64)](https://github.com/s4wbvnny/BetterTether/releases/download/v0.9.0/BetterTether-0.9.0-arm64.dmg) | [![x64](https://img.shields.io/github/downloads/s4wbvnny/BetterTether/BetterTether-0.9.0-x64.dmg?label=x64)](https://github.com/s4wbvnny/BetterTether/releases/download/v0.9.0/BetterTether-0.9.0-x64.dmg) | [![total](https://img.shields.io/github/downloads/s4wbvnny/BetterTether/v0.9.0?label=total)](https://github.com/s4wbvnny/BetterTether/releases/tag/v0.9.0) |
 
 ---
 <div align="center"><img width="448" height="655" alt="image" src="https://github.com/user-attachments/assets/18a5b269-0b83-4102-8728-980d5fd85453" /></div>
