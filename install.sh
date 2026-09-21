@@ -23,6 +23,31 @@ if ! command -v node &>/dev/null; then
   exit 1
 fi
 
+# --- Enable Touch ID for sudo (like iTerm2) ---
+PAM_TID_FILE="/etc/pam.d/sudo_local"
+PAM_TID_LINE="auth       sufficient     pam_tid.so"
+if [[ "$OSTYPE" == darwin* ]]; then
+  if [[ -f "$PAM_TID_FILE" ]]; then
+    if grep -q '^#.*auth.*sufficient.*pam_tid\.so' "$PAM_TID_FILE" 2>/dev/null; then
+      echo "→ Enabling Touch ID for sudo..."
+      sed -i '' 's/^#.*auth.*sufficient.*pam_tid\.so.*/'"$PAM_TID_LINE"'/' "$PAM_TID_FILE"
+      echo "  ✓ Touch ID enabled for sudo"
+    elif grep -q 'auth.*sufficient.*pam_tid\.so' "$PAM_TID_FILE" 2>/dev/null; then
+      echo "  ✓ Touch ID already enabled for sudo"
+    else
+      echo "→ Adding Touch ID support for sudo..."
+      echo "$PAM_TID_LINE" >> "$PAM_TID_FILE"
+      echo "  ✓ Touch ID enabled for sudo"
+    fi
+  else
+    echo "→ Creating sudo Touch ID config..."
+    echo "# sudo_local: local config file which survives system update and is included for sudo" > "$PAM_TID_FILE"
+    echo "# Enable Touch ID for sudo authentication" >> "$PAM_TID_FILE"
+    echo "$PAM_TID_LINE" >> "$PAM_TID_FILE"
+    echo "  ✓ Touch ID enabled for sudo"
+  fi
+fi
+
 # --- Build ---
 echo "→ Building daemon..."
 make -C "$SELF_DIR" build

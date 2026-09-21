@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from 'electron'
+import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, dialog } from 'electron'
 import { execFile, spawn } from 'child_process'
 import { join, dirname, resolve } from 'path'
 import { createWriteStream, readFileSync, writeFileSync, existsSync, chmodSync } from 'fs'
@@ -544,7 +544,15 @@ async function fetchLogs(): Promise<string> {
 
 async function clearLogs(): Promise<void> {
   try {
+    let lastLine = ''
+    try {
+      const { stdout } = await execFileAsync('tail', ['-n', '1', LOG_PATH])
+      lastLine = stdout.trimEnd()
+    } catch { /* no file yet */ }
     await truncate(LOG_PATH, 0)
+    if (lastLine) {
+      writeFileSync(LOG_PATH, lastLine + '\n')
+    }
   } catch {
     // ignore
   }
@@ -710,6 +718,72 @@ app.on('before-quit', () => {
   }
 })
 
+async function promptTouchIdSetup(): Promise<void> {
+  if (process.platform !== 'darwin') return
+  try {
+    const pamFile = '/etc/pam.d/sudo_local'
+    const pamTidLine = 'auth       sufficient     pam_tid.so'
+    try {
+      const { stdout } = await execFileAsync('grep', ['-E', '^auth\\s+sufficient\\s+pam_tid\\.so', pamFile])
+      if (stdout.trim()) return // already enabled
+    } catch { /* line not found or file missing */ }
+
+    const hasTouchId = await execFileAsync('uname', ['-m'])
+      .then(({ stdout }) => stdout.trim() === 'arm64')
+      .catch(() => false)
+    if (!hasTouchId) return
+
+    const { response } = await dialog.showMessageBox({
+      type: 'info',
+      title: 'Enable Touch ID for BetterTether',
+      message: 'Touch ID detected',
+      detail: 'BetterTether can use Touch ID for faster authentication instead of typing your password.\n\nThis requires enabling Touch ID for sudo. Would you like to enable it now?',
+      buttons: ['Enable Touch ID', 'Skip'],
+      defaultId: 0,
+      cancelId: 1,
+    })
+    if (response !== 0) return
+
+    // macOS 25 and earlier: osascript admin elevation works for /etc/pam.d/
+    // macOS 26+: TCC changes may block osascript, fall back to clipboard
+    let enabled = false
+    try {
+      const script = `if [ ! -f "${pamFile}" ]; then
+        echo "# sudo_local: local config file which survives system update and is included for sudo" > "${pamFile}"
+        echo "# Enable Touch ID for sudo authentication" >> "${pamFile}"
+        echo "${pamTidLine}" >> "${pamFile}"
+      elif grep -q '^#.*auth.*sufficient.*pam_tid\\.so' "${pamFile}"; then
+        sed -i '' 's/^#.*auth.*sufficient.*pam_tid\\.so.*/'"${pamTidLine}"'/' "${pamFile}"
+      fi`
+      await execFileAsync('osascript', ['-e', `do shell script "${script.replace(/"/g, '\\"')}" with administrator privileges`], { timeout: 30_000 })
+      enabled = true
+    } catch { /* macOS 26+ TCC blocks osascript for /etc/pam.d */ }
+
+    if (enabled) {
+      dialog.showMessageBox({ type: 'info', title: 'Touch ID Enabled', message: 'Touch ID for sudo has been enabled. You can now use Touch ID when BetterTether requests authentication.' })
+    } else {
+      // Fall back: copy command to clipboard and show instructions
+      const cmd = `sudo bash -c 'if [ ! -f /etc/pam.d/sudo_local ]; then echo "# sudo_local: local config file which survives system update and is included for sudo" > /etc/pam.d/sudo_local; echo "# Enable Touch ID for sudo authentication" >> /etc/pam.d/sudo_local; echo "${pamTidLine}" >> /etc/pam.d/sudo_local; elif grep -q "^#.*auth.*sufficient.*pam_tid\\.so" /etc/pam.d/sudo_local; then sed -i "" "s/^#.*auth.*sufficient.*pam_tid\\.so.*/${pamTidLine}/" /etc/pam.d/sudo_local; fi'`
+      await new Promise<void>((resolve, reject) => {
+        const child = spawn('pbcopy', [], { stdio: ['pipe', 'ignore', 'ignore'] })
+        child.stdin.write(cmd)
+        child.stdin.end()
+        child.on('close', (code) => code === 0 ? resolve() : reject(new Error(`pbcopy exited ${code}`)))
+        child.on('error', reject)
+      })
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Enable Touch ID Manually',
+        message: 'A command has been copied to your clipboard.',
+        detail: 'Open Terminal, paste the command, and press Enter to enable Touch ID for sudo. Then restart BetterTether.',
+        buttons: ['OK'],
+      })
+    }
+  } catch (e) {
+    console.error('[touchid] setup failed:', e)
+  }
+}
+
 app.whenReady().then(() => {
   if (process.platform === 'darwin' && app.dock) {
     app.dock.show()
@@ -749,6 +823,7 @@ app.whenReady().then(() => {
   createTray()
   createWindow()
   startPolling()
+  promptTouchIdSetup()
 })
 
 app.on('activate', () => {
