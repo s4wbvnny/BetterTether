@@ -1,4 +1,4 @@
-# BetterTether — Architecture
+# BetterTether — Architecture 
 
 Deep-dive into data flow, goroutine map, and lifecycle.
 

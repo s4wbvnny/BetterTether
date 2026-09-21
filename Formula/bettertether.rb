@@ -1,4 +1,4 @@
-class BetterTether < Formula
+class BetterTether < Formula 
     desc "Android USB tethering for Apple Silicon Macs — no kext, no SIP changes"
     homepage "https://github.com/s4wbvnny/bettertether"
     version "0.8.7"
