@@ -732,6 +732,8 @@ async function promptTouchIdSetup(): Promise<void> {
       .then(({ stdout }) => stdout.trim() === 'arm64')
       .catch(() => false)
     if (!hasTouchId) return
+    // Verify pam_tid.so module exists
+    if (!existsSync('/usr/lib/pam/pam_tid.so')) return
 
     const { response } = await dialog.showMessageBox({
       type: 'info',
