@@ -215,10 +215,36 @@ async function restartForUpdate(): Promise<{ ok: boolean; error?: string }> {
 APP="$1"
 STAGED="$2"
 PID="$3"
+
+# Stop the daemon so the new binary can be installed
+/bin/launchctl bootout system/com.s4wbvnny.bettertether 2>/dev/null || true
+sleep 1
+
+# Wait for the GUI app to exit
 while kill -0 "$PID" 2>/dev/null; do sleep 0.5; done
+
+# Replace the app bundle
 rm -rf "$APP"
 ditto "$STAGED" "$APP"
 rm -rf "$(dirname "$STAGED")"
+
+# Install the new daemon binary from the updated app bundle
+NEW_BIN="$APP/Contents/Resources/bettertether"
+NEW_PLIST="$APP/Contents/Resources/com.s4wbvnny.bettertether.plist"
+if [ -f "$NEW_BIN" ]; then
+  cp -f "$NEW_BIN" /usr/local/bin/bettertether
+  chmod +x /usr/local/bin/bettertether
+  xattr -dr com.apple.quarantine /usr/local/bin/bettertether 2>/dev/null || true
+fi
+if [ -f "$NEW_PLIST" ]; then
+  cp -f "$NEW_PLIST" /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
+  chmod 644 /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
+  chown root:wheel /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
+  xattr -dr com.apple.quarantine /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist 2>/dev/null || true
+  /bin/launchctl bootstrap system /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist 2>/dev/null || true
+  /bin/launchctl kickstart -k system/com.s4wbvnny.bettertether
+fi
+
 open "$APP"
 `
   writeFileSync(scriptPath, script, { mode: 0o755 })
