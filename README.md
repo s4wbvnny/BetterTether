@@ -79,12 +79,21 @@ This only needs to be done once. After that, BetterTether opens normally.
 
 The app will install the background daemon on first launch (requires admin password).
 
-### Option 2: One-Liner Install
+### Option 2: Homebrew
+```bash
+brew install --cask s4wbvnny/tap/bettertether
+```
+To update to the latest release:
+```bash
+brew update && brew upgrade
+```
+
+### Option 3: One-Liner Install
 ```bash
 curl -sL https://raw.githubusercontent.com/s4wbvnny/BetterTether/main/install.sh | sudo bash
 ```
 
-### Option 3: Build from Source
+### Option 4: Build from Source
 
 **Prerequisites:**
 ```bash
