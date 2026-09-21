@@ -25,7 +25,6 @@ const UNINSTALL_PATH = '/usr/local/bin/bettertether-uninstall'
 const SETTINGS_PATH = join(app.getPath('userData'), 'settings.json')
 const GITHUB_REPO = 's4wbvnny/BetterTether'
 
-let askpassHelper = ''
 
 function getCurrentVersion(): string {
   try {
@@ -168,7 +167,7 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
 
     sendUpdateProgress({ phase: 'stage', percent: 15, message: 'Mounting installer image…' })
     const mountCmd = `xattr -dr com.apple.quarantine '${dmgPath}' 2>/dev/null || true; /sbin/hdiutil attach '${dmgPath}' -nobrowse -readonly -mountpoint '${mountPoint}'`
-    await execFileAsync('sudo', ['-A', '/bin/sh', '-c', mountCmd], { timeout: 60_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } })
+    await execFileAsync('sudo', ['/bin/sh', '-c', mountCmd], { timeout: 60_000 })
 
     const entries = await readdir(mountPoint)
     appEntry = entries.find((e) => e.endsWith('.app')) ?? ''
@@ -178,7 +177,7 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
     sendUpdateProgress({ phase: 'stage', percent: 35, message: 'Copying app bundle…' })
     await rm(stagedApp, { recursive: true, force: true }).catch(() => {})
     const copyCmd = `/usr/bin/ditto '${join(mountPoint, appEntry)}' '${stagedApp}'`
-    await execFileAsync('sudo', ['-A', '/bin/sh', '-c', copyCmd], { timeout: 120_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } })
+    await execFileAsync('sudo', ['/bin/sh', '-c', copyCmd], { timeout: 120_000 })
 
     if (!existsSync(join(stagedApp, 'Contents', 'MacOS'))) {
       throw new Error('Staged app bundle is missing its executable')
@@ -190,7 +189,7 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
     throw e
   } finally {
     const detachCmd = `/sbin/hdiutil detach '${mountPoint}' 2>/dev/null || true; rm -rf '${mountPoint}'`
-    await execFileAsync('sudo', ['-A', '/bin/sh', '-c', detachCmd], { timeout: 30_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } }).catch(() => {})
+    await execFileAsync('sudo', ['/bin/sh', '-c', detachCmd], { timeout: 30_000 }).catch(() => {})
     await rm(dmgPath, { force: true }).catch(() => {})
   }
   console.log(`[update] staged ${appEntry} (${info.version})`)
@@ -248,10 +247,9 @@ fi
 open "$APP"
 `
   writeFileSync(scriptPath, script, { mode: 0o755 })
-  const child = spawn('sudo', ['-A', '/bin/sh', '-c', `nohup /bin/sh '${scriptPath}' '${currentApp}' '${stagedApp}' '${process.pid}' >/dev/null 2>&1 &`], {
+  const child = spawn('sudo', ['/bin/sh', '-c', `nohup /bin/sh '${scriptPath}' '${currentApp}' '${stagedApp}' '${process.pid}' >/dev/null 2>&1 &`], {
     detached: true,
     stdio: 'ignore',
-    env: { ...process.env, SUDO_ASKPASS: askpassHelper },
   })
   child.unref()
   forceQuit = true
@@ -331,7 +329,7 @@ chown root:wheel ${PLIST_PATH}
 /bin/launchctl kickstart -k system/${PLIST_LABEL}`
 
   try {
-    await execFileAsync('sudo', ['-A', '/bin/sh', '-c', script], { timeout: 30_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } })
+    await execFileAsync('sudo', ['/bin/sh', '-c', script], { timeout: 30_000 })
     console.log('[install] daemon installed and bootstrapped')
   } catch (e) {
     console.error('[install] installation/bootstrap failed:', e)
@@ -358,7 +356,7 @@ async function toggleDaemon(start: boolean, window: BrowserWindow | null) {
   } else {
     const stopCmd = `/bin/launchctl bootout system ${PLIST_PATH}`
     try {
-      await execFileAsync('sudo', ['-A', '/bin/sh', '-c', stopCmd], { timeout: 30_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } })
+      await execFileAsync('sudo', ['/bin/sh', '-c', stopCmd], { timeout: 30_000 })
     } catch (e) {
       console.error('[daemon] stop failed:', e)
     }
@@ -564,7 +562,7 @@ rm -rf ~/Library/Preferences/com.s4wbvnny.bettertether-ui.plist
 rm -rf ~/Library/Caches/com.s4wbvnny.bettertether-ui
 rm -rf ~/Library/Application\\ Support/com.s4wbvnny.bettertether-ui`
   try {
-    await execFileAsync('sudo', ['-A', '/bin/sh', '-c', script], { timeout: 30_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } })
+    await execFileAsync('sudo', ['/bin/sh', '-c', script], { timeout: 30_000 })
   } catch (e) {
     console.error('[uninstall] failed:', e)
   }
@@ -716,10 +714,6 @@ app.whenReady().then(() => {
   if (process.platform === 'darwin' && app.dock) {
     app.dock.show()
   }
-
-  // Create askpass helper for sudo -A (enables Touch ID in GUI context)
-  askpassHelper = join(app.getPath('temp'), 'bt-askpass.sh')
-  writeFileSync(askpassHelper, `#!/bin/sh\n/usr/bin/osascript -e 'text returned of (display dialog "BetterTether requires authentication." default answer "" with hidden answer buttons {"Cancel","OK"} default button "OK")'`, { mode: 0o755 })
 
   const appMenu = Menu.buildFromTemplate([
     { role: 'appMenu' },
