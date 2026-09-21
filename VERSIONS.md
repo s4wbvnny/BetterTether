@@ -1,4 +1,4 @@
-# BetterTether — Version 0.9.0
+# BetterTether — Version 0.9.2
 
 One entry per git push. Semantic versioning (MAJOR.MINOR.PATCH).
 - PATCH: bug fix, refactor, docs
@@ -7,6 +7,13 @@ One entry per git push. Semantic versioning (MAJOR.MINOR.PATCH).
 
 Pre-release: all versions are v0.x.x until `brew install bettertether` works end-to-end.
 v1.0.0 = MVP complete and working on M1/M2/M3.
+
+---
+
+## v0.9.2 — 2026-09-21
+- Milestone: Biometric authentication support
+- What's new: Replaced osascript privilege escalation with sudo across all components. Enables Touch ID / Face ID authentication for daemon start/stop, app updates, and installation via macOS PAM (pam_tid.so). Users with Touch ID configured can now authenticate with biometrics instead of typing their password.
+- Technical Narrative: The previous osascript `with administrator privileges` mechanism uses macOS's Security framework authorization dialog, which does not support biometric authentication. By switching to sudo, authentication goes through PAM (Pluggable Authentication Modules), which invokes pam_tid.so — Apple's official Touch ID module. This matches how iTerm2 and other terminal apps support Touch ID for sudo. The Electron GUI uses sudo -A with a custom askpass helper to support Touch ID in GUI context.
 
 ---
 

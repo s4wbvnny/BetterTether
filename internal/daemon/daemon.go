@@ -230,22 +230,22 @@ func (d *Daemon) Status() api.DaemonStatus {
 }
 
 // StartDaemon implements api.StatusProvider.
-// Launches the launchd daemon via osascript for privilege escalation.
+// Launches the launchd daemon via sudo (supports Touch ID via pam_tid.so).
 func (d *Daemon) StartDaemon() error {
 	out, err := exec.Command("launchctl", "print", "system/com.s4wbvnny.bettertether").CombinedOutput()
 	if err == nil && strings.Contains(string(out), "state = running") {
 		return nil
 	}
-	cmd := exec.Command("osascript", "-e",
-		fmt.Sprintf(`do shell script "/bin/launchctl bootstrap system %s 2>/dev/null; /bin/launchctl kickstart -k system/com.s4wbvnny.bettertether 2>/dev/null || true" with administrator privileges`, d.plistPath))
+	cmd := exec.Command("sudo", "/bin/sh", "-c",
+		fmt.Sprintf(`/bin/launchctl bootstrap system %s 2>/dev/null; /bin/launchctl kickstart -k system/com.s4wbvnny.bettertether 2>/dev/null || true`, d.plistPath))
 	return cmd.Run()
 }
 
 // StopDaemon implements api.StatusProvider.
-// Unloads the launchd daemon via osascript for privilege escalation.
+// Unloads the launchd daemon via sudo (supports Touch ID via pam_tid.so).
 func (d *Daemon) StopDaemon() error {
-	cmd := exec.Command("osascript", "-e",
-		fmt.Sprintf(`do shell script "/bin/launchctl bootout system %s" with administrator privileges`, d.plistPath))
+	cmd := exec.Command("sudo", "/bin/sh", "-c",
+		fmt.Sprintf(`/bin/launchctl bootout system %s`, d.plistPath))
 	return cmd.Run()
 }
 

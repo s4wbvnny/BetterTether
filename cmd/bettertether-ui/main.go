@@ -95,11 +95,11 @@ func toggle() {
 	statusItem.SetTitle("Status: authenticating...")
 
 	if start {
-		exec.Command("osascript", "-e",
-			fmt.Sprintf(`do shell script "/bin/launchctl bootstrap system %s 2>/dev/null; /bin/launchctl kickstart -k system/com.s4wbvnny.bettertether 2>/dev/null || true" with administrator privileges`, plistPath)).Run()
+		exec.Command("sudo", "/bin/sh", "-c",
+			fmt.Sprintf(`/bin/launchctl bootstrap system %s 2>/dev/null; /bin/launchctl kickstart -k system/com.s4wbvnny.bettertether 2>/dev/null || true`, plistPath)).Run()
 	} else {
-		exec.Command("osascript", "-e",
-			fmt.Sprintf(`do shell script "/bin/launchctl bootout system %s" with administrator privileges`, plistPath)).Run()
+		exec.Command("sudo", "/bin/sh", "-c",
+			fmt.Sprintf(`/bin/launchctl bootout system %s`, plistPath)).Run()
 	}
 
 	time.Sleep(1500 * time.Millisecond)

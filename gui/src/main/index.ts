@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from 'electron'
 import { execFile, spawn } from 'child_process'
 import { join, dirname, resolve } from 'path'
-import { createWriteStream, readFileSync, writeFileSync, existsSync } from 'fs'
+import { createWriteStream, readFileSync, writeFileSync, existsSync, chmodSync } from 'fs'
 import { mkdir, readdir, rm, truncate } from 'fs/promises'
 import { promisify } from 'util'
 import { IPC } from '../shared/channels'
@@ -24,6 +24,8 @@ const DAEMON_PATH = '/usr/local/bin/bettertether'
 const UNINSTALL_PATH = '/usr/local/bin/bettertether-uninstall'
 const SETTINGS_PATH = join(app.getPath('userData'), 'settings.json')
 const GITHUB_REPO = 's4wbvnny/BetterTether'
+
+let askpassHelper = ''
 
 function getCurrentVersion(): string {
   try {
@@ -165,9 +167,8 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
     await mkdir(stagedDir, { recursive: true })
 
     sendUpdateProgress({ phase: 'stage', percent: 15, message: 'Mounting installer image…' })
-    const mountScript = `do shell script "xattr -dr com.apple.quarantine '${dmgPath}' 2>/dev/null || true
-/sbin/hdiutil attach '${dmgPath}' -nobrowse -readonly -mountpoint '${mountPoint}'" with administrator privileges`
-    await execFileAsync('osascript', ['-e', mountScript], { timeout: 60_000 })
+    const mountCmd = `xattr -dr com.apple.quarantine '${dmgPath}' 2>/dev/null || true; /sbin/hdiutil attach '${dmgPath}' -nobrowse -readonly -mountpoint '${mountPoint}'`
+    await execFileAsync('sudo', ['-A', '/bin/sh', '-c', mountCmd], { timeout: 60_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } })
 
     const entries = await readdir(mountPoint)
     appEntry = entries.find((e) => e.endsWith('.app')) ?? ''
@@ -176,8 +177,8 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
     const stagedApp = join(stagedDir, appEntry)
     sendUpdateProgress({ phase: 'stage', percent: 35, message: 'Copying app bundle…' })
     await rm(stagedApp, { recursive: true, force: true }).catch(() => {})
-    const copyScript = `do shell script "/usr/bin/ditto '${join(mountPoint, appEntry)}' '${stagedApp}'" with administrator privileges`
-    await execFileAsync('osascript', ['-e', copyScript], { timeout: 120_000 })
+    const copyCmd = `/usr/bin/ditto '${join(mountPoint, appEntry)}' '${stagedApp}'`
+    await execFileAsync('sudo', ['-A', '/bin/sh', '-c', copyCmd], { timeout: 120_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } })
 
     if (!existsSync(join(stagedApp, 'Contents', 'MacOS'))) {
       throw new Error('Staged app bundle is missing its executable')
@@ -188,9 +189,8 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
     sendUpdateProgress({ phase: 'error', percent: 0, message: 'Update configuration failed.' })
     throw e
   } finally {
-    const detachScript = `do shell script "/sbin/hdiutil detach '${mountPoint}' 2>/dev/null || true
-rm -rf '${mountPoint}'" with administrator privileges`
-    await execFileAsync('osascript', ['-e', detachScript], { timeout: 30_000 }).catch(() => {})
+    const detachCmd = `/sbin/hdiutil detach '${mountPoint}' 2>/dev/null || true; rm -rf '${mountPoint}'`
+    await execFileAsync('sudo', ['-A', '/bin/sh', '-c', detachCmd], { timeout: 30_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } }).catch(() => {})
     await rm(dmgPath, { force: true }).catch(() => {})
   }
   console.log(`[update] staged ${appEntry} (${info.version})`)
@@ -222,10 +222,10 @@ rm -rf "$(dirname "$STAGED")"
 open "$APP"
 `
   writeFileSync(scriptPath, script, { mode: 0o755 })
-  const osaScript = `do shell script "nohup /bin/sh '${scriptPath}' '${currentApp}' '${stagedApp}' '${process.pid}' >/dev/null 2>&1 &" with administrator privileges`
-  const child = spawn('osascript', ['-e', osaScript], {
+  const child = spawn('sudo', ['-A', '/bin/sh', '-c', `nohup /bin/sh '${scriptPath}' '${currentApp}' '${stagedApp}' '${process.pid}' >/dev/null 2>&1 &`], {
     detached: true,
     stdio: 'ignore',
+    env: { ...process.env, SUDO_ASKPASS: askpassHelper },
   })
   child.unref()
   forceQuit = true
@@ -289,8 +289,7 @@ async function installAndBootstrapDaemon(): Promise<void> {
     cpUninstall = `cp -f '${uninstallRes}' ${UNINSTALL_PATH} && chmod +x ${UNINSTALL_PATH} &&`
   }
 
-  const script = `do shell script "
-${cpConfig}
+  const script = `${cpConfig}
 ${cpUninstall}
 mkdir -p /usr/local/bin
 cp -f '${binaryRes}' ${DAEMON_PATH}
@@ -303,11 +302,10 @@ chmod 644 ${PLIST_PATH}
 chown root:wheel ${PLIST_PATH}
 /bin/launchctl bootout system/${PLIST_LABEL} 2>/dev/null || true
 /bin/launchctl bootstrap system '${PLIST_PATH}'
-/bin/launchctl kickstart -k system/${PLIST_LABEL}
-" with administrator privileges`
+/bin/launchctl kickstart -k system/${PLIST_LABEL}`
 
   try {
-    await execFileAsync('osascript', ['-e', script], { timeout: 30_000 })
+    await execFileAsync('sudo', ['-A', '/bin/sh', '-c', script], { timeout: 30_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } })
     console.log('[install] daemon installed and bootstrapped')
   } catch (e) {
     console.error('[install] installation/bootstrap failed:', e)
@@ -332,9 +330,9 @@ async function toggleDaemon(start: boolean, window: BrowserWindow | null) {
       console.error('[daemon] start failed:', e)
     }
   } else {
-    const script = `do shell script "/bin/launchctl bootout system ${PLIST_PATH}" with administrator privileges`
+    const stopCmd = `/bin/launchctl bootout system ${PLIST_PATH}`
     try {
-      await execFileAsync('osascript', ['-e', script], { timeout: 30_000 })
+      await execFileAsync('sudo', ['-A', '/bin/sh', '-c', stopCmd], { timeout: 30_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } })
     } catch (e) {
       console.error('[daemon] stop failed:', e)
     }
@@ -529,21 +527,18 @@ async function clearLogs(): Promise<void> {
 }
 
 async function uninstallEverything(): Promise<void> {
-  const script = `
-do shell script "
-  launchctl bootout system ${PLIST_PATH} 2>/dev/null || true
-  sleep 1
-  rm -f ${PLIST_PATH}
-  rm -f ${DAEMON_PATH}
-  rm -f ${UNINSTALL_PATH}
-  rm -f ${LOG_PATH}
-  rm -rf /etc/bettertether
-  rm -rf ~/Library/Preferences/com.s4wbvnny.bettertether-ui.plist
-  rm -rf ~/Library/Caches/com.s4wbvnny.bettertether-ui
-  rm -rf ~/Library/Application\\ Support/com.s4wbvnny.bettertether-ui
-" with administrator privileges`
+  const script = `launchctl bootout system ${PLIST_PATH} 2>/dev/null || true
+sleep 1
+rm -f ${PLIST_PATH}
+rm -f ${DAEMON_PATH}
+rm -f ${UNINSTALL_PATH}
+rm -f ${LOG_PATH}
+rm -rf /etc/bettertether
+rm -rf ~/Library/Preferences/com.s4wbvnny.bettertether-ui.plist
+rm -rf ~/Library/Caches/com.s4wbvnny.bettertether-ui
+rm -rf ~/Library/Application\\ Support/com.s4wbvnny.bettertether-ui`
   try {
-    await execFileAsync('osascript', ['-e', script], { timeout: 30_000 })
+    await execFileAsync('sudo', ['-A', '/bin/sh', '-c', script], { timeout: 30_000, env: { ...process.env, SUDO_ASKPASS: askpassHelper } })
   } catch (e) {
     console.error('[uninstall] failed:', e)
   }
@@ -695,6 +690,10 @@ app.whenReady().then(() => {
   if (process.platform === 'darwin' && app.dock) {
     app.dock.show()
   }
+
+  // Create askpass helper for sudo -A (enables Touch ID in GUI context)
+  askpassHelper = join(app.getPath('temp'), 'bt-askpass.sh')
+  writeFileSync(askpassHelper, `#!/bin/sh\n/usr/bin/osascript -e 'text returned of (display dialog "BetterTether requires authentication." default answer "" with hidden answer buttons {"Cancel","OK"} default button "OK")'`, { mode: 0o755 })
 
   const appMenu = Menu.buildFromTemplate([
     { role: 'appMenu' },
