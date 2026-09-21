@@ -208,3 +208,61 @@ jobs:
             release/BetterTether-*-arm64.dmg
             release/BetterTether-*-x64.dmg
           generate_release_notes: true
+
+      - name: Update Homebrew tap
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          echo "Updating tap to ${VERSION}"
+
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "::warning::TAP_TOKEN secret not set — skipping tap update. Add a PAT with repo access to secrets.TAP_TOKEN"
+            exit 0
+          fi
+
+          # Download DMGs from the release we just created
+          curl -sL -o /tmp/arm64.dmg \
+            "https://github.com/s4wbvnny/BetterTether/releases/download/${TAG}/BetterTether-${VERSION}-arm64.dmg"
+          curl -sL -o /tmp/x64.dmg \
+            "https://github.com/s4wbvnny/BetterTether/releases/download/${TAG}/BetterTether-${VERSION}-x64.dmg"
+
+          ARM64_SHA=$(shasum -a 256 /tmp/arm64.dmg | awk '{print $1}')
+          X64_SHA=$(shasum -a 256 /tmp/x64.dmg | awk '{print $1}')
+          echo "arm64 sha256: ${ARM64_SHA}"
+          echo "x64 sha256: ${X64_SHA}"
+
+          # Clone the tap repo
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/s4wbvnny/homebrew-tap.git" /tmp/tap
+
+          cat > /tmp/tap/Casks/bettertether.rb <<RUBY
+          cask "bettertether" do
+            version "${VERSION}"
+
+            on_arm do
+              sha256 "${ARM64_SHA}"
+              url "https://github.com/s4wbvnny/BetterTether/releases/download/${TAG}/BetterTether-${VERSION}-arm64.dmg"
+            end
+            on_intel do
+              sha256 "${X64_SHA}"
+              url "https://github.com/s4wbvnny/BetterTether/releases/download/${TAG}/BetterTether-${VERSION}-x64.dmg"
+            end
+
+            name "BetterTether"
+            desc "USB tethering manager for macOS"
+            homepage "https://github.com/s4wbvnny/BetterTether"
+
+            app "BetterTether.app"
+
+            uninstall quit: "com.s4wbvnny.bettertether-ui"
+          end
+          RUBY
+
+          cd /tmp/tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/bettertether.rb
+          git diff --cached --quiet && echo "No changes to cask" && exit 0
+          git commit -m "Update BetterTether to ${VERSION}"
+          git push
