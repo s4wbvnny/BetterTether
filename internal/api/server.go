@@ -53,8 +53,12 @@ func New(host string, port int, provider StatusProvider) *Server {
 	mux.HandleFunc("/api/daemon/start", s.handleStart)
 	mux.HandleFunc("/api/daemon/stop", s.handleStop)
 	s.server = &http.Server{
-		Handler:     corsMiddleware(mux),
-		ReadTimeout: 10 * time.Second,
+		Handler:           corsMiddleware(mux),
+		ReadTimeout:       10 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		MaxHeaderBytes:    16 << 10,
 	}
 	return s
 }
