@@ -135,7 +135,10 @@ lint:
 # Release
 # ──────────────────────────────────────────────
 
-release: test test-race build
+version-check:
+	@bash scripts/check-version.sh
+
+release: version-check test test-race build
 	@VERSION=$$(cat VERSIONS.md | grep '^## v' | head -1 | awk '{print $$2}'); \
 	echo "→ Tagging release $$VERSION"; \
 	git tag -a $$VERSION -m "Release $$VERSION"; \

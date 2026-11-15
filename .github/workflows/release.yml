@@ -14,6 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify version matches tag
+        run: ./scripts/check-version.sh "${{ github.ref_name }}"
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -98,6 +101,9 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+
+      - name: Verify version matches tag
+        run: ./scripts/check-version.sh "${{ github.ref_name }}"
 
       - name: Set up Go
         uses: actions/setup-go@v5
