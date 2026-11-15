@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sync"
 	"unsafe"
 
 	"golang.org/x/sys/unix"
@@ -23,6 +24,9 @@ type utunInterface struct {
 	f       *os.File
 	name    string
 	address string // local IP assigned via Configure
+
+	closeOnce sync.Once
+	closeErr  error
 }
 
 func (i *utunInterface) Read(p []byte) (n int, err error) {
@@ -33,7 +37,17 @@ func (i *utunInterface) Write(p []byte) (n int, err error) {
 	return i.f.Write(p)
 }
 
+// Close tears down the routes and network state added by the interface and
+// releases the utun socket. It is safe to call more than once: the daemon
+// closes the interface both from the shutdown goroutine and from a defer.
 func (i *utunInterface) Close() error {
+	i.closeOnce.Do(func() {
+		i.closeErr = i.close()
+	})
+	return i.closeErr
+}
+
+func (i *utunInterface) close() error {
 	// Cleanup routes we added
 	_ = exec.Command("route", "delete", "-net", "0.0.0.0/1").Run()
 	_ = exec.Command("route", "delete", "-net", "128.0.0.0/1").Run()
