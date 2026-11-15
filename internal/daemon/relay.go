@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -75,7 +76,9 @@ func (r *Relay) Start() error {
 
 	// Mac -> Phone (Tunnel -> USB)
 	go func() {
-		buf := make([]byte, 2048)
+		// Large enough for any MTU the config can ask for; the 2048-byte
+		// buffer silently truncated frames once MTU was raised.
+		buf := make([]byte, 65536)
 		for {
 			select {
 			case <-r.ctx.Done():
@@ -133,8 +136,11 @@ func (r *Relay) Start() error {
 
 	// Phone -> Mac (USB -> Tunnel)
 	go func() {
-		buf := make([]byte, 16384)
-		usbErrors := 0
+		// The read buffer must be able to hold a full MTU plus the utun header.
+		// It was sized at 16 KiB, which is fine today but silently truncates
+		// if the negotiated MTU ever grows.
+		buf := make([]byte, 65536)
+		var usbErrors, noDeviceErrors int
 		for {
 			select {
 			case <-r.ctx.Done():
@@ -143,6 +149,16 @@ func (r *Relay) Start() error {
 				n, err := r.usbIn.Read(buf)
 				if err != nil {
 					usbErrors++
+					if errors.Is(err, gousb.ErrorNoDevice) {
+						noDeviceErrors++
+						// "No device" means the cable is out. Replugging cannot
+						// revive this session yet, so surface it once instead of
+						// retrying forever without a trace.
+						if noDeviceErrors == 200 {
+							log.Warn().Str("component", "relay").
+								Msg("USB device no longer present — restart the daemon to reconnect")
+						}
+					}
 					if usbErrors <= 5 || usbErrors%100 == 0 {
 						log.Warn().Str("component", "relay").Err(err).Int("count", usbErrors).Msg("USB IN read error (retrying)")
 					}
@@ -150,6 +166,7 @@ func (r *Relay) Start() error {
 					continue
 				}
 				usbErrors = 0
+				noDeviceErrors = 0
 
 				if n == 0 {
 					continue
@@ -253,8 +270,18 @@ func (r *Relay) Start() error {
 
 // autoDetectMAC updates phoneMAC if the received source MAC differs (Samsung MAC randomization workaround).
 func (r *Relay) autoDetectMAC(srcMAC []byte) {
+	// Both addresses are fixed 6-byte fields. A device that reported a
+	// truncated MAC must not turn a frame-by-frame logging path into a panic.
+	if len(srcMAC) < 6 {
+		return
+	}
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	if len(r.phoneMAC) < 6 {
+		return
+	}
 
 	for i := 0; i < 6; i++ {
 		if r.phoneMAC[i] != srcMAC[i] {

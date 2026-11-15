@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -204,7 +205,10 @@ func (d *Daemon) getRelayStats() *api.RelayStats {
 	if r.clientIP != nil {
 		clientIP = r.clientIP.String()
 	}
-	phoneMAC := fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", r.phoneMAC[0], r.phoneMAC[1], r.phoneMAC[2], r.phoneMAC[3], r.phoneMAC[4], r.phoneMAC[5])
+	phoneMAC := ""
+	if len(r.phoneMAC) == 6 {
+		phoneMAC = net.HardwareAddr(r.phoneMAC).String()
+	}
 	r.mu.Unlock()
 
 	return &api.RelayStats{
