@@ -8,7 +8,7 @@ on:
 jobs:
   release-arm64:
     name: Build arm64 (Apple Silicon)
-    runs-on: macos-14
+    runs-on: macos-15
     permissions:
       contents: read
     steps:
@@ -96,7 +96,7 @@ jobs:
 
   release-x64:
     name: Build x64 (Intel)
-    runs-on: macos-14
+    runs-on: macos-15
     permissions:
       contents: read
     steps:

@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: macos-14  # Apple Silicon runner (M1)
+    runs-on: macos-15  # arm64; macOS 14 images were retired 2026-11-02
 
     steps:
       - uses: actions/checkout@v4
@@ -55,7 +55,7 @@ jobs:
 
   gui:
     name: GUI
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - uses: actions/checkout@v4
