@@ -1,6 +1,9 @@
-# BetterTether — Default Configuration 
+# BetterTether — Default Configuration
 # File: /opt/homebrew/etc/bettertether/bettertether.toml
 # Docs: https://github.com/s4wbvnny/bettertether
+#
+# This file is a set of overrides. Anything you leave out keeps the built-in
+# default, so you only need to include the settings you actually change.
 
 [usb]
 # How often to poll for new USB devices (milliseconds)
@@ -8,13 +11,6 @@ poll_interval_ms = 500
 
 # Timeout when claiming USB interface (milliseconds)
 claim_timeout_ms = 2000
-
-# Detach kernel driver before claiming interface (almost always true)
-detach_kernel_driver = true
-
-# Additional VID/PID pairs not in the built-in list
-# Format: ["VID:PID", ...]  e.g. ["04e8:6863"]
-extra_vidpid = []
 
 
 [rndis]
@@ -32,12 +28,14 @@ read_buffer_size = 65536
 
 
 [tun]
-# Name prefix for the utun interface
-# Actual name will be bettertether0, bettertether1, etc.
-# Note: macOS assigns utunN names; this is the ifconfig alias
-interface_name_prefix = "bettertether"
+# The interface name is assigned by the kernel when the utun socket is created;
+# macOS will hand out utunN (for example utun6), and that name cannot be chosen.
+# Check it with: ifconfig | grep utun
 
-# MTU for the utun interface
+# MTU for the utun interface.
+# 1400 leaves room for the RNDIS and USB framing overhead. If large transfers
+# hang while small requests work, lower this (1380 is a common working value):
+#   sudo ifconfig utun6 mtu 1380
 mtu = 1400
 
 
@@ -75,8 +73,6 @@ level = "info"
 # Log format: text (human-readable) | json (machine-readable)
 format = "text"
 
-# Log file path (empty = stdout)
-file = "/var/log/bettertether.log"
-
-# Whether to log raw packet hex dumps (very verbose, debug only)
-dump_packets = false
+# The log destination is set by the LaunchDaemon plist (StandardOutPath), which
+# writes /var/log/bettertether.log. Set logging to "text" to keep that file
+# readable; "json" is meant for machine consumption.

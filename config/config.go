@@ -39,8 +39,9 @@ type RNDISConfig struct {
 }
 
 type TUNConfig struct {
-	InterfaceName string `toml:"interface_name"`
-	MTU           int    `toml:"mtu"`
+	// MTU applied to the utun interface. The interface name itself is chosen
+	// by the kernel (utunN) and is not configurable.
+	MTU int `toml:"mtu"`
 }
 
 type DHCPConfig struct {
@@ -86,8 +87,7 @@ func DefaultConfig() *Config {
 			ReadBufferSize:  65536,
 		},
 		TUN: TUNConfig{
-			InterfaceName: "bettertether",
-			MTU:           1400,
+			MTU: 1400,
 		},
 		DHCP: DHCPConfig{
 			TimeoutMS:    5000,
@@ -117,9 +117,13 @@ func Load(path string) (*Config, error) {
 		}
 	}
 
-	conf := &Config{}
+	// Decode on top of the defaults so a config file only has to specify the
+	// settings it actually changes. Decoding into a zero value made an omitted
+	// section behave like an explicit "off" — a file without [route] silently
+	// disabled the default route.
+	conf := DefaultConfig()
 	if path == "" {
-		return DefaultConfig(), nil
+		return conf, nil
 	}
 
 	if _, err := toml.DecodeFile(path, conf); err != nil {
