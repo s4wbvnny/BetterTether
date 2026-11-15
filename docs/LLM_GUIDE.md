@@ -122,7 +122,7 @@ Example session state file (`/tmp/bettertether-session.toml`):
 [session]
 started_at = "2025-03-28T10:00:00Z"
 phone_mac = "aa:bb:cc:dd:ee:ff"
-utun_interface = "bettertether0"
+utun_interface = "utun6"
 assigned_ip = "192.168.42.129"
 gateway_ip = "192.168.42.1"
 status = "active"

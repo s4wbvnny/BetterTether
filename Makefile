@@ -51,8 +51,8 @@ test-race:
 	go test -race ./...
 
 test-integration:
-	@echo "→ Integration tests (requires root for utun creation)"
-	sudo go test -tags integration -v ./test/integration/...
+	@echo "✗ test/integration/ does not exist yet — see TESTING.md for what is covered today"
+	@exit 1
 
 test-live:
 	@echo "→ Live end-to-end test (requires phone attached + USB tethering ON)"

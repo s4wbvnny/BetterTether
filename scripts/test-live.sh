@@ -10,10 +10,22 @@ set -e
 
 BINARY="./build/bettertether"
 CONFIG="./config/default.toml"
-INTERFACE="bettertether0"
 TEST_HOST="8.8.8.8"
 PASS=0
 FAIL=0
+
+# macOS names the interface utunN when the daemon creates it, so discover it from
+# the split-default route BetterTether installs instead of hard-coding a name.
+if [ "$(id -u)" -eq 0 ]; then
+  INTERFACE="$(netstat -rn -f inet 2>/dev/null | awk '$1 == "0/1" { print $NF; exit }')"
+else
+  INTERFACE="$(sudo netstat -rn -f inet 2>/dev/null | awk '$1 == "0/1" { print $NF; exit }')"
+fi
+if [ -z "${INTERFACE:-}" ]; then
+  echo "No BetterTether tunnel found. Is the daemon running with USB tethering on?" >&2
+  exit 1
+fi
+echo "Using interface: $INTERFACE"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
