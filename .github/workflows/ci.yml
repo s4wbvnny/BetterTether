@@ -46,3 +46,34 @@ jobs:
           CGO_ENABLED: 1
           GOARCH: arm64
           GOOS: darwin
+
+      - name: Version consistency
+        run: ./scripts/check-version.sh
+
+      - name: Update installer test
+        run: ./scripts/test-update-install.sh
+
+  gui:
+    name: GUI
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: gui/package-lock.json
+
+      - name: Install dependencies
+        run: cd gui && npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: cd gui && npx tsc --noEmit
+
+      - name: Build
+        run: cd gui && npm run build
+
+      - name: Test
+        run: cd gui && npm test -- --passWithNoTests
