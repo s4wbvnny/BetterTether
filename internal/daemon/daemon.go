@@ -26,7 +26,7 @@ type Daemon struct {
 	wg        sync.WaitGroup
 	startTime time.Time
 
-	mu         sync.Mutex
+	mu          sync.Mutex
 	activeRelay *Relay
 
 	plistPath string

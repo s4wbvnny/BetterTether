@@ -62,7 +62,7 @@ type LoggingConfig struct {
 // Default paths for BetterTether config files on macOS.
 var DefaultConfigPaths = []string{
 	"/etc/bettertether/bettertether.toml",
-	"/usr/local/etc/bettertether/bettertether.toml", // Intel Homebrew
+	"/usr/local/etc/bettertether/bettertether.toml",    // Intel Homebrew
 	"/opt/homebrew/etc/bettertether/bettertether.toml", // ARM Homebrew
 }
 

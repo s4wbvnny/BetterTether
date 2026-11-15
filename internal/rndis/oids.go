@@ -2,12 +2,12 @@ package rndis
 
 // RNDIS message types (Host -> Device)
 const (
-	MsgInit          uint32 = 0x00000002
-	MsgQuery         uint32 = 0x00000004
-	MsgSet           uint32 = 0x00000005
-	MsgReset         uint32 = 0x00000006
-	MsgKeepAlive     uint32 = 0x00000008
-	MsgPacket        uint32 = 0x00000001
+	MsgInit      uint32 = 0x00000002
+	MsgQuery     uint32 = 0x00000004
+	MsgSet       uint32 = 0x00000005
+	MsgReset     uint32 = 0x00000006
+	MsgKeepAlive uint32 = 0x00000008
+	MsgPacket    uint32 = 0x00000001
 )
 
 // RNDIS message completion types (Device -> Host)
@@ -37,10 +37,10 @@ const (
 	OID_GEN_CURRENT_PACKET_FILTER uint32 = 0x0001010E
 	OID_GEN_MAXIMUM_TOTAL_SIZE    uint32 = 0x00010111
 
-	OID_802_3_PERMANENT_ADDRESS   uint32 = 0x01010101
-	OID_802_3_CURRENT_ADDRESS     uint32 = 0x01010102
-	OID_802_3_MULTICAST_LIST      uint32 = 0x01010103
-	OID_802_3_MAXIMUM_LIST_SIZE   uint32 = 0x01010104
+	OID_802_3_PERMANENT_ADDRESS uint32 = 0x01010101
+	OID_802_3_CURRENT_ADDRESS   uint32 = 0x01010102
+	OID_802_3_MULTICAST_LIST    uint32 = 0x01010103
+	OID_802_3_MAXIMUM_LIST_SIZE uint32 = 0x01010104
 )
 
 // RNDIS Packet Filters
@@ -60,10 +60,10 @@ const (
 
 // RNDIS Status Codes
 const (
-	StatusSuccess          uint32 = 0x00000000
-	StatusFailure          uint32 = 0xC0000001
-	StatusNotSupported     uint32 = 0xC00000BB
-	StatusInvalidData      uint32 = 0xC0010015
-	StatusInvalidLength    uint32 = 0xC0010014
-	StatusResources        uint32 = 0xC000009A
+	StatusSuccess       uint32 = 0x00000000
+	StatusFailure       uint32 = 0xC0000001
+	StatusNotSupported  uint32 = 0xC00000BB
+	StatusInvalidData   uint32 = 0xC0010015
+	StatusInvalidLength uint32 = 0xC0010014
+	StatusResources     uint32 = 0xC000009A
 )

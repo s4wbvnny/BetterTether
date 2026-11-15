@@ -11,11 +11,11 @@ import (
 
 // utun configuration constants for macOS
 const (
-	AF_SYSTEM              = 32
-	SYSPROTO_CONTROL       = 2
-	AF_SYS_CONTROL         = 2
-	UTUN_CONTROL_NAME      = "com.apple.net.utun_control"
-	droidTetherServiceID   = "BetterTether"
+	AF_SYSTEM            = 32
+	SYSPROTO_CONTROL     = 2
+	AF_SYS_CONTROL       = 2
+	UTUN_CONTROL_NAME    = "com.apple.net.utun_control"
+	droidTetherServiceID = "BetterTether"
 )
 
 // utunInterface implements Interface for Darwin using AF_SYSTEM.

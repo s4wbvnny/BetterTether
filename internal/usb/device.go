@@ -2,8 +2,8 @@ package usb
 
 import (
 	"fmt"
-	"time"
 	"github.com/google/gousb"
+	"time"
 )
 
 // Device wraps a gousb.Device with RNDIS specific fields and capabilities.
@@ -152,7 +152,7 @@ func (d *Device) OpenBulkEndpoints() (in *gousb.InEndpoint, out *gousb.OutEndpoi
 							continue
 						}
 					}
-					
+
 					in, out, _ = d.findEndpoints(intf)
 					if in != nil && out != nil {
 						fmt.Printf("USB DEBUG: Found bulk endpoints on intf %d alt %d\n", intfDesc.Number, alt.Number)

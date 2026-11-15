@@ -22,10 +22,10 @@ type RelayStats struct {
 }
 
 type DaemonStatus struct {
-	Running  bool        `json:"running"`
-	Active   bool        `json:"active"`
-	Relay    *RelayStats `json:"relay,omitempty"`
-	Uptime   string      `json:"uptime,omitempty"`
+	Running bool        `json:"running"`
+	Active  bool        `json:"active"`
+	Relay   *RelayStats `json:"relay,omitempty"`
+	Uptime  string      `json:"uptime,omitempty"`
 }
 
 type StatusProvider interface {

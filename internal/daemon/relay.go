@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/google/gousb"
+	"github.com/rs/zerolog/log"
 	"github.com/s4wbvnny/BetterTether/internal/rndis"
 	"github.com/s4wbvnny/BetterTether/internal/tun"
 	"github.com/s4wbvnny/BetterTether/internal/usb"
-	"github.com/rs/zerolog/log"
 )
 
 // Relay handles the packet shuttle between USB Bulk and Tunnel interface.

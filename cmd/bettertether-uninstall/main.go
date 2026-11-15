@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	binaryPath    = "/usr/local/bin/bettertether"
-	selfPath      = "/usr/local/bin/bettertether-uninstall"
-	appPath       = "/Applications/BetterTether.app"
-	plistPath     = "/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
-	configDir     = "/etc/bettertether"
-	logFile       = "/var/log/bettertether.log"
+	binaryPath = "/usr/local/bin/bettertether"
+	selfPath   = "/usr/local/bin/bettertether-uninstall"
+	appPath    = "/Applications/BetterTether.app"
+	plistPath  = "/Library/LaunchDaemons/com.s4wbvnny.bettertether.plist"
+	configDir  = "/etc/bettertether"
+	logFile    = "/var/log/bettertether.log"
 )
 
 var (

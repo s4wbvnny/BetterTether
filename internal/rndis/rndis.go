@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/s4wbvnny/BetterTether/internal/usb"
 	"github.com/rs/zerolog/log"
+	"github.com/s4wbvnny/BetterTether/internal/usb"
 )
 
 // Session manages a single RNDIS logical session.
@@ -144,7 +144,7 @@ func (s *Session) sendControl(data []byte) error {
 // receiveControl retrieves an encapsulated RNDIS response.
 func (s *Session) receiveControl() ([]byte, error) {
 	buf := make([]byte, 2048)
-	
+
 	// Direct polling with generous retries for macOS (50 * 20ms = 1s total)
 	for i := 0; i < 50; i++ {
 		time.Sleep(20 * time.Millisecond)
