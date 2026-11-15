@@ -89,6 +89,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: arm64-builds
+          retention-days: 7
           path: |
             gui/dist/BetterTether-*-arm64.dmg
             build/bettertether-darwin-arm64.tar.gz
@@ -187,6 +188,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: x64-builds
+          retention-days: 7
           path: |
             gui/dist/BetterTether-*-x64.dmg
             build/bettertether-darwin-x64.tar.gz
