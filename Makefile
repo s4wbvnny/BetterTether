@@ -5,6 +5,12 @@ UNINSTALL    = bettertether-uninstall
 BUILD_DIR    = ./build
 CMD          = ./cmd/bettertether
 CMD_UNINSTALL = ./cmd/bettertether-uninstall
+# libusb is linked statically so the installed daemon has no Homebrew runtime
+# dependency. gousb links via `pkg-config: libusb-1.0`, so we hand pkg-config a
+# private .pc that resolves to libusb-1.0.a instead of the .dylib.
+LIBUSB_PREFIX = $(shell brew --prefix libusb 2>/dev/null || echo /opt/homebrew/opt/libusb)
+LIBUSB_PC_DIR = $(BUILD_DIR)/pkgconfig
+LIBUSB_PC     = $(LIBUSB_PC_DIR)/libusb-1.0.pc
 # Auto-detect host architecture if not specified
 UNAME_M      := $(shell uname -m)
 ifeq ($(UNAME_M),arm64)
@@ -22,12 +28,34 @@ export COPYFILE_DISABLE=1
 # Build
 # ──────────────────────────────────────────────
 
-build:
+$(LIBUSB_PC):
+	@mkdir -p $(LIBUSB_PC_DIR)
+	@printf '%s\n' \
+	  'prefix=$(LIBUSB_PREFIX)' \
+	  'includedir=$${prefix}/include/libusb-1.0' \
+	  'libdir=$${prefix}/lib' \
+	  '' \
+	  'Name: libusb-1.0' \
+	  'Description: C library for USB device access' \
+	  'Version: 1.0.30' \
+	  'Libs: $${libdir}/libusb-1.0.a -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security' \
+	  'Cflags: -I$${includedir}' > $@
+	@echo "✓ Static libusb pkg-config: $@"
+
+build: $(LIBUSB_PC)
 	@echo "→ Building $(BINARY) for $(GOOS)/$(GOARCH)..."
+	@# CGO_LDFLAGS is part of cgo's build-cache key, PKG_CONFIG_PATH is not.
+	@# Passing it makes a previously cached dynamic link rebuild instead of
+	@# being silently reused; -dead_strip_dylibs is a no-op for this link.
+	PKG_CONFIG_PATH=$(LIBUSB_PC_DIR) \
+	CGO_LDFLAGS="-Wl,-dead_strip_dylibs" \
 	GOARCH=$(GOARCH) GOOS=$(GOOS) CGO_ENABLED=$(CGO) \
 		go build -ldflags="-X main.version=$(shell cat VERSIONS.md | grep '^## v' | head -1 | awk '{print $$2}')" \
 		-o $(BUILD_DIR)/$(BINARY) $(CMD)
-	@echo "✓ Built: $(BUILD_DIR)/$(BINARY)"
+	@if otool -L $(BUILD_DIR)/$(BINARY) 2>/dev/null | grep -q 'libusb-1.0.0.dylib'; then \
+		echo "✗ $(BINARY) still links Homebrew libusb dynamically — static link failed"; \
+		exit 1; fi
+	@echo "✓ Built: $(BUILD_DIR)/$(BINARY) (libusb statically linked)"
 	@echo "→ Building $(UNINSTALL)..."
 	CGO_ENABLED=0 go build -o $(BUILD_DIR)/$(UNINSTALL) $(CMD_UNINSTALL)
 	@echo "✓ Built: $(BUILD_DIR)/$(UNINSTALL)"

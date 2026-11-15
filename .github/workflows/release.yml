@@ -29,19 +29,36 @@ jobs:
       - name: Build arm64 Go binary
         run: |
           set -ex
-          echo "=== Step 1: Create build dir ==="
-          mkdir -p build
-          echo "=== Step 2: Build main binary ==="
-          GOARCH=arm64 GOOS=darwin CGO_ENABLED=1 \
+          echo "=== Step 1: Create build dir + static libusb pkg-config ==="
+          mkdir -p build/pkgconfig
+          LIBUSB_PREFIX="$(brew --prefix libusb)"
+          cat > build/pkgconfig/libusb-1.0.pc <<PC
+          prefix=${LIBUSB_PREFIX}
+          includedir=${LIBUSB_PREFIX}/include/libusb-1.0
+          libdir=${LIBUSB_PREFIX}/lib
+
+          Name: libusb-1.0
+          Description: C library for USB device access
+          Version: 1.0.30
+          Libs: ${LIBUSB_PREFIX}/lib/libusb-1.0.a -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security
+          Cflags: -I${LIBUSB_PREFIX}/include/libusb-1.0
+          PC
+          echo "=== Step 2: Build main binary (libusb linked statically) ==="
+          PKG_CONFIG_PATH=build/pkgconfig CGO_LDFLAGS="-Wl,-dead_strip_dylibs" \
+            GOARCH=arm64 GOOS=darwin CGO_ENABLED=1 \
             go build -v -ldflags="-X main.version=${{ github.ref_name }}" \
             -o build/bettertether ./cmd/bettertether
           echo "=== Step 3: Build uninstall binary ==="
           GOARCH=arm64 GOOS=darwin CGO_ENABLED=0 \
             go build -v -o build/bettertether-uninstall ./cmd/bettertether-uninstall
-          echo "=== Step 4: Verify build output ==="
+          echo "=== Step 4: Verify no Homebrew runtime dependency ==="
           ls -la build/
           file build/bettertether
           file build/bettertether-uninstall
+          if otool -L build/bettertether | grep -q 'libusb-1.0.0.dylib'; then
+            echo "::error::arm64 binary still links Homebrew libusb dynamically"
+            exit 1
+          fi
 
       - name: Package arm64 tarball
         run: |
@@ -105,29 +122,37 @@ jobs:
       - name: Build x64 Go binary
         run: |
           set -ex
-          echo "=== Step 1: Create build dir ==="
-          mkdir -p build
-          echo "=== Step 2: Build main binary ==="
-          CC="clang -arch x86_64" \
-            CGO_CFLAGS="-I$HOME/libusb-x64/include/libusb-1.0" \
-            CGO_LDFLAGS="-L$HOME/libusb-x64/lib -lusb-1.0" \
+          echo "=== Step 1: Create build dir + static libusb pkg-config ==="
+          mkdir -p build/pkgconfig
+          cat > build/pkgconfig/libusb-1.0.pc <<PC
+          prefix=$HOME/libusb-x64
+          includedir=$HOME/libusb-x64/include/libusb-1.0
+          libdir=$HOME/libusb-x64/lib
+
+          Name: libusb-1.0
+          Description: C library for USB device access
+          Version: 1.0.30
+          Libs: $HOME/libusb-x64/lib/libusb-1.0.a -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security
+          Cflags: -I$HOME/libusb-x64/include/libusb-1.0
+          PC
+          echo "=== Step 2: Build main binary (libusb linked statically) ==="
+          PKG_CONFIG_PATH=build/pkgconfig CGO_LDFLAGS="-Wl,-dead_strip_dylibs" \
+            CC="clang -arch x86_64" \
             GOARCH=amd64 GOOS=darwin CGO_ENABLED=1 \
             go build -v -ldflags="-X main.version=${{ github.ref_name }}" \
             -o build/bettertether ./cmd/bettertether
           echo "=== Step 3: Build uninstall binary ==="
           GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 \
             go build -v -o build/bettertether-uninstall ./cmd/bettertether-uninstall
-          echo "=== Step 4: Verify build output ==="
+          echo "=== Step 4: Verify no Homebrew runtime dependency ==="
           ls -la build/
           file build/bettertether
           file build/bettertether-uninstall
-          echo "=== Step 5: Point libusb dep at standard Intel Homebrew path ==="
-          otool -L build/bettertether | grep -i libusb
-          install_name_tool -change \
-            "$HOME/libusb-x64/lib/libusb-1.0.0.dylib" \
-            /usr/local/opt/libusb/lib/libusb-1.0.0.dylib \
-            build/bettertether
-          otool -L build/bettertether | grep -i libusb
+          otool -L build/bettertether | grep -i libusb && {
+            echo "::error::x64 binary still links libusb dynamically"
+            exit 1
+          }
+          echo "libusb is statically linked — no install_name_tool rewrite needed"
 
       - name: Package x64 tarball
         run: |
