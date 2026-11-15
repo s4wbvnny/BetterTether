@@ -43,11 +43,11 @@ jobs:
           Name: libusb-1.0
           Description: C library for USB device access
           Version: 1.0.30
-          Libs: ${LIBUSB_PREFIX}/lib/libusb-1.0.a -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security
+          Libs: -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security
           Cflags: -I${LIBUSB_PREFIX}/include/libusb-1.0
           PC
           echo "=== Step 2: Build main binary (libusb linked statically) ==="
-          PKG_CONFIG_PATH=build/pkgconfig CGO_LDFLAGS="-Wl,-dead_strip_dylibs" \
+          PKG_CONFIG_PATH="$PWD/build/pkgconfig" CGO_LDFLAGS="$(brew --prefix libusb)/lib/libusb-1.0.a -Wl,-dead_strip_dylibs" \
             GOARCH=arm64 GOOS=darwin CGO_ENABLED=1 \
             go build -v -ldflags="-X main.version=${{ github.ref_name }}" \
             -o build/bettertether ./cmd/bettertether
@@ -139,11 +139,11 @@ jobs:
           Name: libusb-1.0
           Description: C library for USB device access
           Version: 1.0.30
-          Libs: $HOME/libusb-x64/lib/libusb-1.0.a -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security
+          Libs: -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security
           Cflags: -I$HOME/libusb-x64/include/libusb-1.0
           PC
           echo "=== Step 2: Build main binary (libusb linked statically) ==="
-          PKG_CONFIG_PATH=build/pkgconfig CGO_LDFLAGS="-Wl,-dead_strip_dylibs" \
+          PKG_CONFIG_PATH="$PWD/build/pkgconfig" CGO_LDFLAGS="$HOME/libusb-x64/lib/libusb-1.0.a -Wl,-dead_strip_dylibs" \
             CC="clang -arch x86_64" \
             GOARCH=amd64 GOOS=darwin CGO_ENABLED=1 \
             go build -v -ldflags="-X main.version=${{ github.ref_name }}" \

@@ -9,8 +9,11 @@ CMD_UNINSTALL = ./cmd/bettertether-uninstall
 # dependency. gousb links via `pkg-config: libusb-1.0`, so we hand pkg-config a
 # private .pc that resolves to libusb-1.0.a instead of the .dylib.
 LIBUSB_PREFIX = $(shell brew --prefix libusb 2>/dev/null || echo /opt/homebrew/opt/libusb)
-LIBUSB_PC_DIR = $(BUILD_DIR)/pkgconfig
+# Absolute: cgo resolves PKG_CONFIG_PATH from the compiler's working directory,
+# so a relative entry silently falls back to Homebrew's .pc and links the dylib.
+LIBUSB_PC_DIR = $(CURDIR)/build/pkgconfig
 LIBUSB_PC     = $(LIBUSB_PC_DIR)/libusb-1.0.pc
+LIBUSB_LIB    = $(LIBUSB_PREFIX)/lib/libusb-1.0.a
 # Auto-detect host architecture if not specified
 UNAME_M      := $(shell uname -m)
 ifeq ($(UNAME_M),arm64)
@@ -38,17 +41,17 @@ $(LIBUSB_PC):
 	  'Name: libusb-1.0' \
 	  'Description: C library for USB device access' \
 	  'Version: 1.0.30' \
-	  'Libs: $${libdir}/libusb-1.0.a -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security' \
+	  'Libs: -lobjc -Wl,-framework,IOKit -Wl,-framework,CoreFoundation -Wl,-framework,Security' \
 	  'Cflags: -I$${includedir}' > $@
 	@echo "✓ Static libusb pkg-config: $@"
 
 build: $(LIBUSB_PC)
 	@echo "→ Building $(BINARY) for $(GOOS)/$(GOARCH)..."
-	@# CGO_LDFLAGS is part of cgo's build-cache key, PKG_CONFIG_PATH is not.
-	@# Passing it makes a previously cached dynamic link rebuild instead of
-	@# being silently reused; -dead_strip_dylibs is a no-op for this link.
+	@# The archive goes in CGO_LDFLAGS because that IS part of cgo's build-cache
+	@# key, while PKG_CONFIG_PATH is not: otherwise a build that once resolved
+	@# Homebrew's dylib stays cached and keeps linking it.
 	PKG_CONFIG_PATH=$(LIBUSB_PC_DIR) \
-	CGO_LDFLAGS="-Wl,-dead_strip_dylibs" \
+	CGO_LDFLAGS="$(LIBUSB_LIB) -Wl,-dead_strip_dylibs" \
 	GOARCH=$(GOARCH) GOOS=$(GOOS) CGO_ENABLED=$(CGO) \
 		go build -ldflags="-X main.version=$(shell cat VERSIONS.md | grep '^## v' | head -1 | awk '{print $$2}')" \
 		-o $(BUILD_DIR)/$(BINARY) $(CMD)
