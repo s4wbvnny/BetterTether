@@ -208,6 +208,15 @@ async function restartForUpdate(): Promise<{ ok: boolean; error?: string }> {
   const stagedApp = join(stagedDir, appEntry)
   const currentApp = resolve(dirname(process.execPath), '..', '..')
 
+  if (!app.isPackaged) {
+    return { ok: false, error: 'Updates are only available in the packaged app.' }
+  }
+  // Gatekeeper runs quarantined apps out of a throwaway translocated path. There
+  // is nothing durable to replace there, so the update would silently not apply.
+  if (currentApp.includes('/AppTransLocation/')) {
+    return { ok: false, error: 'Move BetterTether to Applications before updating.' }
+  }
+
   const installerSrc = resourcePath('update-install.sh')
   if (!existsSync(installerSrc)) {
     return { ok: false, error: 'The installer script is missing from the app bundle.' }
