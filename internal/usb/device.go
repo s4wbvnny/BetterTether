@@ -2,8 +2,10 @@ package usb
 
 import (
 	"fmt"
-	"github.com/google/gousb"
 	"time"
+
+	"github.com/google/gousb"
+	"github.com/rs/zerolog/log"
 )
 
 // Device wraps a gousb.Device with RNDIS specific fields and capabilities.
@@ -82,7 +84,7 @@ func NewDevice(dev *gousb.Device) (*Device, error) {
 			class := uint8(alt.Class)
 			if class == 0x0A || class == 0xFF || class == 0xEF {
 				if len(alt.Endpoints) >= 2 {
-					fmt.Printf("USB DEBUG: Proactively claiming Data Intf %d Alt %d\n", intfDesc.Number, alt.Number)
+					log.Debug().Msgf("Proactively claiming Data Intf %d Alt %d", intfDesc.Number, alt.Number)
 					dataIntf, err := usbc.Interface(intfDesc.Number, alt.Number)
 					if err == nil {
 						d.dataIntf = dataIntf
@@ -137,15 +139,15 @@ func (d *Device) OpenBulkEndpoints() (in *gousb.InEndpoint, out *gousb.OutEndpoi
 			}
 			for _, alt := range intfDesc.AltSettings {
 				if len(alt.Endpoints) >= 2 {
-					fmt.Printf("USB DEBUG: Try claim intf %d alt %d\n", intfDesc.Number, alt.Number)
+					log.Debug().Msgf("Try claim intf %d alt %d", intfDesc.Number, alt.Number)
 					intf, err := d.usbc.Interface(intfDesc.Number, alt.Number)
 					if err != nil {
-						fmt.Printf("USB DEBUG: failed to claim intf %d alt %d: %v\n", intfDesc.Number, alt.Number, err)
+						log.Debug().Msgf("failed to claim intf %d alt %d: %v", intfDesc.Number, alt.Number, err)
 						if alt.Number != 0 {
-							fmt.Printf("USB DEBUG: trying fallback alt 0 for intf %d\n", intfDesc.Number)
+							log.Debug().Msgf("trying fallback alt 0 for intf %d", intfDesc.Number)
 							intf, err = d.usbc.Interface(intfDesc.Number, 0)
 							if err != nil {
-								fmt.Printf("USB DEBUG: fallback failed: %v\n", err)
+								log.Debug().Msgf("fallback failed: %v", err)
 								continue
 							}
 						} else {
@@ -155,11 +157,11 @@ func (d *Device) OpenBulkEndpoints() (in *gousb.InEndpoint, out *gousb.OutEndpoi
 
 					in, out, _ = d.findEndpoints(intf)
 					if in != nil && out != nil {
-						fmt.Printf("USB DEBUG: Found bulk endpoints on intf %d alt %d\n", intfDesc.Number, alt.Number)
+						log.Debug().Msgf("Found bulk endpoints on intf %d alt %d", intfDesc.Number, alt.Number)
 						d.dataIntf = intf
 						return in, out, nil
 					} else {
-						fmt.Printf("USB DEBUG: Endpoints not found after claiming.\n")
+						log.Debug().Msgf("Endpoints not found after claiming.")
 					}
 					intf.Close()
 				}
