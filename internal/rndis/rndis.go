@@ -105,8 +105,13 @@ func (s *Session) Handshake() ([]byte, error) {
 		return nil, fmt.Errorf("rndis: SET filter failed with status 0x%08X", setStatus)
 	}
 
+	mac, err := extractMAC(macCmplt.Payload)
+	if err != nil {
+		return nil, err
+	}
+
 	log.Info().Str("component", "rndis").Msg("RNDIS handshake complete. Device in DATA mode.")
-	return macCmplt.Payload, nil
+	return mac, nil
 }
 
 // KeepAlive sends a REMOTE_NDIS_KEEPALIVE_MSG to keep the connection active.
@@ -154,4 +159,19 @@ func (s *Session) receiveControl() ([]byte, error) {
 		}
 	}
 	return nil, fmt.Errorf("rndis: timeout waiting for control response")
+}
+
+// extractMAC validates and copies the OID_802_3_CURRENT_ADDRESS payload.
+//
+// Devices can answer a MAC query with fewer than six bytes. The relay indexes
+// the address as a fixed 6-byte field when building Ethernet frames, so a short
+// payload would panic the daemon. The copy also detaches the address from the
+// USB read buffer, which is reused by the next control transfer.
+func extractMAC(payload []byte) ([]byte, error) {
+	if len(payload) < 6 {
+		return nil, fmt.Errorf("rndis: MAC address payload too short (%d bytes, need 6)", len(payload))
+	}
+	mac := make([]byte, 6)
+	copy(mac, payload[:6])
+	return mac, nil
 }
