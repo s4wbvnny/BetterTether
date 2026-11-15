@@ -1,4 +1,4 @@
-# BetterTether — Version 0.9.2
+# BetterTether — Version 0.9.3
 
 One entry per git push. Semantic versioning (MAJOR.MINOR.PATCH).
 - PATCH: bug fix, refactor, docs
@@ -7,6 +7,14 @@ One entry per git push. Semantic versioning (MAJOR.MINOR.PATCH).
 
 Pre-release: all versions are v0.x.x until `brew install bettertether` works end-to-end.
 v1.0.0 = MVP complete and working on M1/M2/M3.
+
+---
+
+## v0.9.3 — 2026-11-15
+- Milestone: Reliability, security and packaging pass
+- What's new: The daemon is now statically linked against libusb, so installing from the DMG or cask no longer requires Homebrew on the target machine — previously the binary pointed at `/opt/homebrew/opt/libusb/lib/libusb-1.0.0.dylib` and launchd restarted a dying process forever for anyone without it. Configuration files are now overrides: any section you leave out keeps its default, instead of decoding to zero values (a file without `[route]` used to disable default routing silently, so tethering connected but carried no traffic). Fixed a crash when a device answers the MAC query with fewer than six bytes. The DMG window has its own centred background art instead of electron-builder's default, which placed the arrow left of the icons.
+- Security: The update flow no longer builds `sh -c` strings out of download paths and release tags, so a tag containing a quote can no longer become a shell command running as root. The installer is a standalone, testable script, and the app now verifies it can obtain administrator rights *before* quitting — a failed `sudo` used to close the window and apply nothing, with no message.
+- Technical Narrative: Most of this release is about failure modes that were invisible rather than broken. The libusb link was silently satisfied on the author's machine by Homebrew and unsatisfiable everywhere else; the config loader treated an omitted section as an explicit "off"; `tsc` had never run over the GUI, which hid a shadowed `index.d.ts` and left the entire renderer API surface untyped. The release pipeline now refuses to tag when `VERSIONS.md`, `gui/package.json` and the tag disagree, because electron-builder names the DMG from one and the workflow downloads it by the other. CI additionally builds and type-checks the Electron app, and runs a harness that proves the update installer really replaces the app bundle, the daemon binary and the plist.
 
 ---
 

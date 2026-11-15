@@ -227,9 +227,26 @@ jobs:
           ls -la release/
           git archive --format=zip -o release/BetterTether-${{ github.ref_name }}.zip HEAD
 
+      - name: Extract release notes from VERSIONS.md
+        run: |
+          set -e
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v want="## v${VERSION}" '
+            index($0, want) == 1 { inblock = 1 }
+            inblock && (/^---[[:space:]]*$/ || (/^## v/ && index($0, want) != 1)) { exit }
+            inblock { print }
+          ' VERSIONS.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::warning::no VERSIONS.md entry for v${VERSION}; using a generic body"
+            printf 'Improvements in v%s.\n' "${VERSION}" > release-notes.md
+          fi
+          echo "=== release body ==="
+          head -4 release-notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          body_path: release-notes.md
           files: |
             release/BetterTether-*.zip
             release/bettertether-darwin-arm64.tar.gz
