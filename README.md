@@ -161,13 +161,28 @@ sudo xattr -rd com.apple.quarantine /Applications/BetterTether.app
 ```
 Then relaunch BetterTether. Either method only needs to be done once after installing from a DMG download.
 
-### "Missing libusb on first launch"
-If you should encounter this error on your first launch the command below is an easy fix:
+### "Missing libusb on first launch" (0.9.2 and earlier)
+Versions up to 0.9.2 linked dynamically against Homebrew's libusb. If you see a dyld error mentioning `libusb-1.0.0.dylib`, install it:
 ```
 brew install libusb
 ```
 
 Launch the app again and enjoy!
+
+0.9.3 and later link libusb statically, so this step is no longer needed.
+
+---
+
+## Support
+
+BetterTether is free and MIT-licensed, and it stays that way. If it saved you a tethering fee, restored an afternoon of work, or just made your day easier, a donation is welcome — but never expected.
+
+| Network | Address |
+|---|---|
+| Bitcoin — BTC (P2WPKH) | `bc1qd2wsxzp2f5yw88h44peeagg5afmvnuqqm856c7` |
+| Ethereum — ETH / ERC-20 | `0x9Cffa8A44b5DB7273C06454a582E12EbfEC5795D` |
+
+Copy these from this page rather than from a search result, a DM, or a clipboard you don't remember filling. Donation addresses are a favourite target for impersonation, and the Ethereum address above is shown in its EIP-55 mixed-case form so a mistyped character is detectable.
 
 ---
 
