@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, dialog } from 'el
 import { execFile, spawn } from 'child_process'
 import { join, dirname, resolve } from 'path'
 import { createWriteStream, readFileSync, writeFileSync, existsSync, chmodSync } from 'fs'
-import { mkdir, readdir, rm, truncate } from 'fs/promises'
+import { chmod, copyFile, mkdir, readdir, rm, truncate } from 'fs/promises'
 import { promisify } from 'util'
 import { IPC } from '../shared/channels'
 import type { DaemonStatus, AppSettings, UpdateInfo, UpdateProgress } from '../shared/types'
@@ -149,12 +149,6 @@ async function downloadUpdate(): Promise<void> {
   }
 }
 
-function execFileAsyncCmd(cmd: string, args: string[]): Promise<void> {
-  return new Promise((resolveExec, rejectExec) => {
-    execFile(cmd, args, { timeout: 180_000 }, (err) => (err ? rejectExec(err) : resolveExec()))
-  })
-}
-
 async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
   sendUpdateProgress({ phase: 'stage', percent: 5, message: 'Preparing update…' })
   const mountPoint = join(app.getPath('temp'), `bt-mount-${Date.now()}`)
@@ -166,8 +160,13 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
     await mkdir(stagedDir, { recursive: true })
 
     sendUpdateProgress({ phase: 'stage', percent: 15, message: 'Mounting installer image…' })
-    const mountCmd = `xattr -dr com.apple.quarantine '${dmgPath}' 2>/dev/null || true; /sbin/hdiutil attach '${dmgPath}' -nobrowse -readonly -mountpoint '${mountPoint}'`
-    await execFileAsync('sudo', ['/bin/sh', '-c', mountCmd], { timeout: 60_000 })
+    // Every argument is passed as its own argv entry, never interpolated into a
+    // shell string, so a release tag or a user name containing a quote cannot
+    // become shell code. The privilege model is unchanged from before.
+    await execFileAsync('sudo', ['xattr', '-dr', 'com.apple.quarantine', dmgPath], { timeout: 30_000 }).catch(() => {})
+    await execFileAsync('sudo', ['/sbin/hdiutil', 'attach', dmgPath, '-nobrowse', '-readonly', '-mountpoint', mountPoint], {
+      timeout: 60_000,
+    })
 
     const entries = await readdir(mountPoint)
     appEntry = entries.find((e) => e.endsWith('.app')) ?? ''
@@ -176,8 +175,7 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
     const stagedApp = join(stagedDir, appEntry)
     sendUpdateProgress({ phase: 'stage', percent: 35, message: 'Copying app bundle…' })
     await rm(stagedApp, { recursive: true, force: true }).catch(() => {})
-    const copyCmd = `/usr/bin/ditto '${join(mountPoint, appEntry)}' '${stagedApp}'`
-    await execFileAsync('sudo', ['/bin/sh', '-c', copyCmd], { timeout: 120_000 })
+    await execFileAsync('sudo', ['/usr/bin/ditto', join(mountPoint, appEntry), stagedApp], { timeout: 120_000 })
 
     if (!existsSync(join(stagedApp, 'Contents', 'MacOS'))) {
       throw new Error('Staged app bundle is missing its executable')
@@ -188,8 +186,8 @@ async function stageUpdate(dmgPath: string, info: UpdateInfo): Promise<void> {
     sendUpdateProgress({ phase: 'error', percent: 0, message: 'Update configuration failed.' })
     throw e
   } finally {
-    const detachCmd = `/sbin/hdiutil detach '${mountPoint}' 2>/dev/null || true; rm -rf '${mountPoint}'`
-    await execFileAsync('sudo', ['/bin/sh', '-c', detachCmd], { timeout: 30_000 }).catch(() => {})
+    await execFileAsync('sudo', ['/sbin/hdiutil', 'detach', mountPoint], { timeout: 30_000 }).catch(() => {})
+    await rm(mountPoint, { recursive: true, force: true }).catch(() => {})
     await rm(dmgPath, { force: true }).catch(() => {})
   }
   console.log(`[update] staged ${appEntry} (${info.version})`)
@@ -209,49 +207,44 @@ async function restartForUpdate(): Promise<{ ok: boolean; error?: string }> {
 
   const stagedApp = join(stagedDir, appEntry)
   const currentApp = resolve(dirname(process.execPath), '..', '..')
-  const scriptPath = join(app.getPath('temp'), 'bt-update-install.sh')
-  const script = `#!/bin/bash
-APP="$1"
-STAGED="$2"
-PID="$3"
 
-# Stop the daemon so the new binary can be installed
-/bin/launchctl bootout system/com.s4wbvnny.bettertether 2>/dev/null || true
-sleep 1
+  const installerSrc = resourcePath('update-install.sh')
+  if (!existsSync(installerSrc)) {
+    return { ok: false, error: 'The installer script is missing from the app bundle.' }
+  }
 
-# Wait for the GUI app to exit
-while kill -0 "$PID" 2>/dev/null; do sleep 0.5; done
+  const scriptPath = join(app.getPath('temp'), `bt-update-install-${Date.now()}.sh`)
+  await copyFile(installerSrc, scriptPath)
+  await chmod(scriptPath, 0o755)
 
-# Replace the app bundle
-rm -rf "$APP"
-ditto "$STAGED" "$APP"
-rm -rf "$(dirname "$STAGED")"
+  // Authenticate before quitting. The installer runs detached and the app exits
+  // immediately, so an authentication failure there would remove the window and
+  // leave the update unapplied, with nothing on screen to explain it.
+  try {
+    await execFileAsync('sudo', ['-n', 'true'], { timeout: 5_000 })
+  } catch {
+    try {
+      await execFileAsync('sudo', ['-v'], { timeout: 120_000 })
+    } catch {
+      await rm(scriptPath, { force: true }).catch(() => {})
+      return { ok: false, error: 'Administrator authentication failed.' }
+    }
+  }
 
-# Install the new daemon binary from the updated app bundle
-NEW_BIN="$APP/Contents/Resources/bettertether"
-NEW_PLIST="$APP/Contents/Resources/com.s4wbvnny.bettertether.plist"
-if [ -f "$NEW_BIN" ]; then
-  cp -f "$NEW_BIN" /usr/local/bin/bettertether
-  chmod +x /usr/local/bin/bettertether
-  xattr -dr com.apple.quarantine /usr/local/bin/bettertether 2>/dev/null || true
-fi
-if [ -f "$NEW_PLIST" ]; then
-  cp -f "$NEW_PLIST" /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
-  chmod 644 /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
-  chown root:wheel /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist
-  xattr -dr com.apple.quarantine /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist 2>/dev/null || true
-  /bin/launchctl bootstrap system /Library/LaunchDaemons/com.s4wbvnny.bettertether.plist 2>/dev/null || true
-  /bin/launchctl kickstart -k system/com.s4wbvnny.bettertether
-fi
+  try {
+    // Arguments go in an argv array, never a shell string: a path or a release
+    // tag containing a quote can no longer become shell code.
+    const child = spawn('sudo', [scriptPath, currentApp, stagedApp, String(process.pid)], {
+      detached: true,
+      stdio: 'ignore',
+    })
+    child.unref()
+  } catch (e) {
+    console.error('[update] failed to start installer:', e)
+    await rm(scriptPath, { force: true }).catch(() => {})
+    return { ok: false, error: 'Could not start the updater.' }
+  }
 
-open "$APP"
-`
-  writeFileSync(scriptPath, script, { mode: 0o755 })
-  const child = spawn('sudo', ['/bin/sh', '-c', `nohup /bin/sh '${scriptPath}' '${currentApp}' '${stagedApp}' '${process.pid}' >/dev/null 2>&1 &`], {
-    detached: true,
-    stdio: 'ignore',
-  })
-  child.unref()
   forceQuit = true
   setTimeout(() => app.quit(), 300)
   return { ok: true }
@@ -628,7 +621,7 @@ function buildTrayContextMenu() {
   ])
 }
 
-function createTrayIcon(): nativeImage.NativeImage {
+function createTrayIcon(): Electron.NativeImage {
   const iconPath = app.isPackaged
     ? join(process.resourcesPath, 'tray-icon.png')
     : join(__dirname, '../../resources/tray-icon.png')
