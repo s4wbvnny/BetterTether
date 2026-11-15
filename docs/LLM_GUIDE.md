@@ -43,16 +43,15 @@ internal/tun/relay.go
 ### Working on DHCP
 ```
 CHANGELOG.md
-internal/dhcp/README.md
-internal/dhcp/packets.go
+internal/daemon/relay.go   (buildDHCPDiscover, tryExtractDHCP — DHCP is in-band, not a package)
 ```
 
 ### Writing tests
 ```
 CHANGELOG.md
 docs/TESTING.md
-internal/<package>/mock.go (if exists)
-test/fixtures/ (binary captures)
+internal/rndis/messages_test.go
+config/config_test.go
 ```
 
 ### Debugging a live issue
@@ -98,8 +97,8 @@ max_transfer_size = 16384
 init_timeout_ms = 3000
 
 [tun]
-interface_name = "bettertether0"
-mtu = 1500
+# The interface name is assigned by the kernel (utunN); it is not configurable.
+mtu = 1400
 
 [dhcp]
 timeout_ms = 5000
@@ -178,7 +177,7 @@ On every `git push` (or `git tag`), add to VERSIONS.md:
 - Milestone: RNDIS handshake working end-to-end
 - What works: USB detect, INIT/QUERY/SET, data mode active
 - What's broken: DHCP not yet started
-- Next: implement DHCP DORA in internal/dhcp
+- Next: relay sends the DHCP DISCOVER and snoops OFFER/ACK in-band (internal/daemon/relay.go)
 ```
 
 Semantic versioning:

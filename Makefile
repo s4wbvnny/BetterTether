@@ -310,7 +310,7 @@ help:
 	@echo "  release           Tag + prepare release"
 	@echo "  version           Show current version"
 	@echo "  app               Build BetterTether.app menu-bar UI bundle (requires libusb)"
-	@echo "  build-ui          Build the menu-bar UI binary only"
+	@echo "  build-ui          Stage daemon binary + plist for the Electron app"
 	@echo "  pkg               Build unsigned .pkg installer (includes daemon + .app)"
 	@echo "  pkg-signed        Build signed .pkg (requires Apple Developer ID)"
 	@echo "  pkg-notarize      Notarize an already-signed .pkg"

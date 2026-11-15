@@ -8,27 +8,28 @@ How to test BetterTether at every stage of development.
 
 ### 1. Unit Tests (no hardware needed)
 Run: `make test`  
-Location: `internal/*/..._test.go`
+Location: `internal/*/..._test.go`, `config/`
 
-Tests run entirely with mocks. No USB device, no utun (we don't create real interfaces in unit tests).
+No USB device and no utun interface are required; every test exercises pure
+functions and builds its own input buffers inline.
 
-Key test files:
-- `internal/rndis/rndis_test.go` — encode/decode every RNDIS message type using captured binary fixtures
-- `internal/dhcp/dhcp_test.go` — DORA packet construction and parsing
-- `internal/usb/device_test.go` — VID/PID matching logic, interface claiming against mock
-- `internal/tun/tun_test.go` — packet framing (Ethernet→IP strip, 4-byte utun header handling)
+What is covered today:
+- `internal/rndis/messages_test.go` — marshalling and parsing for every RNDIS control message, including the short-buffer and out-of-bounds branches
+- `internal/rndis/mac_test.go` — MAC address extraction, including the truncated payload that used to panic the daemon
+- `internal/daemon/relay_test.go` — MAC auto-detection and status reporting for short and mismatched addresses
+- `config/config_test.go` — omitted config sections keep their defaults, and explicit values win
 
-### 2. Integration Tests (requires Apple Silicon Mac, no phone needed)
-Run: `make test-integration`  
-Build tag: `//go:build integration`  
-Location: `test/integration/`
+Not covered yet (needs a mock USB layer, which does not exist):
+- RNDIS handshake sequencing, USB interface claiming, utun framing, DHCP/ARP parsing
 
-These tests:
-- Create a real utun interface (requires root)
-- Send/receive test packets through it
-- Verify route injection and cleanup
+### 2. Integration Tests
+Not implemented. `make test-integration` points at `test/integration/`, which does
+not exist yet. Until it does, exercise utun creation by running the daemon in the
+foreground:
 
-Run as: `sudo go test -tags integration ./test/integration/`
+```bash
+sudo ./build/bettertether -config ./config/default.toml
+```
 
 ### 3. Live End-to-End Test (requires phone)
 Run: `make test-live`  
@@ -42,9 +43,9 @@ Prerequisites:
 What the script checks:
 1. `bettertether` binary finds the USB device
 2. RNDIS handshake completes (check log output)
-3. utun interface appears (`ifconfig | grep bettertether`)
+3. utun interface appears (`ifconfig | grep utun` — the kernel names it utunN)
 4. DHCP assigns an IP
-5. `ping -c 3 -I bettertether0 8.8.8.8` succeeds
+5. `ping -c 3 -I utun6 8.8.8.8` succeeds (use the actual utunN name)
 6. Unplugging phone tears down cleanly
 
 ---
@@ -71,7 +72,7 @@ make test-live
 go test ./internal/rndis/...
 
 # Run a single test function
-go test ./internal/rndis/... -run TestInitializeMessage
+go test ./internal/rndis/... -run TestControlMessageMarshalling
 ```
 
 ---
@@ -98,43 +99,12 @@ Install fswatch: `brew install fswatch`
 
 ---
 
-## Test Fixtures
+## Test Fixtures and Mocks
 
-Binary packet captures in `test/fixtures/` are used in unit tests for RNDIS decode tests.
-
-To capture new fixtures from a real session:
-```bash
-# Enable debug logging to capture raw packets
-bettertether --log-level debug --dump-packets /tmp/bettertether-capture/
-
-# Fixtures will be written as:
-# /tmp/bettertether-capture/rndis_init_cmplt_001.bin
-# /tmp/bettertether-capture/rndis_query_cmplt_001.bin
-# etc.
-```
-
-Copy relevant captures to `test/fixtures/` and reference them in tests:
-```go
-data, _ := os.ReadFile("../../test/fixtures/rndis_init_cmplt.bin")
-msg, err := rndis.DecodeInitCmplt(data)
-```
-
----
-
-## Mock USB Interface
-
-`internal/usb/mock.go` provides `MockDevice` which implements the same `Device` interface as the real USB device. Use it in unit tests:
-
-```go
-mock := usb.NewMockDevice()
-mock.QueueResponse(rndis.InitCmpltBytes(requestID))  // pre-load responses
-
-engine := rndis.NewEngine(mock)
-err := engine.Initialize()
-assert.NoError(t, err)
-```
-
----
+There are no binary fixture files and no mock USB device yet. Tests build their
+input buffers inline and assert on the same bytes they pass in. If you capture a
+real exchange, add it as a case in `internal/rndis/messages_test.go` rather than
+committing a binary blob.
 
 ## Checking the Daemon
 

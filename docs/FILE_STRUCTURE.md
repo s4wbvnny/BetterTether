@@ -128,11 +128,10 @@ cmd/bettertether/main.go
 internal/daemon
     ├──▶ internal/usb       (device open, hotplug)
     ├──▶ internal/rndis     (protocol handshake)
-    ├──▶ internal/tun       (utun + relay)
-    ├──▶ internal/dhcp      (IP assignment)
-    └──▶ internal/route     (default route)
+    └──▶ internal/tun       (utun creation, IP/routes/DNS)
+        (DHCP and ARP are handled in-band inside internal/daemon/relay.go)
 
 config ◀── daemon (loaded at startup)
 ```
 
-No circular dependencies. Each internal package is independently testable with mock interfaces.
+No circular dependencies: `usb → rndis → relay → tun`, with `daemon` and `api` on top.

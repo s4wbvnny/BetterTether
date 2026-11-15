@@ -39,9 +39,9 @@ Deep-dive into data flow, goroutine map, and lifecycle.
 ┌────────────────────────────────────────────────▼────────────────┐
 │                     macOS Kernel                                 │
 │                                                                 │
-│  utun3 interface (bettertether0)                                   │
+│  utunN interface (name assigned by the kernel)                  │
 │  IP: 192.168.42.129/24                                          │
-│  Default route → utun3                                          │
+│  Default route → utunN                                          │
 │                                                                 │
 │  [macOS Network Stack] ──▶ [Apps / Safari / curl / etc.]       │
 └─────────────────────────────────────────────────────────────────┘
@@ -56,11 +56,11 @@ At steady state (one phone connected), BetterTether runs these goroutines:
 ```
 main goroutine
 ├── daemon.Run()
-│   ├── usb.Watcher.Watch()        [goroutine — USB hotplug poll loop]
+│   ├── usb.Watcher.pollLoop()     [goroutine — USB hotplug poll loop]
 │   │
-│   └── session.Start()            [one per attached phone]
+│   └── daemon.OnAttach()          [one goroutine per attached phone]
 │       ├── rndis.Handshake()      [blocking, completes before relay starts]
-│       ├── dhcp.Acquire()         [blocking, completes before relay starts]
+│       ├── relay.Start()          [blocking; DHCP sniffed from USB traffic]
 │       │
 │       ├── relay.USBtoTUN()       [goroutine — USB bulk IN → utun write]
 │       └── relay.TUNtoUSB()       [goroutine — utun read → USB bulk OUT]
@@ -96,7 +96,7 @@ Total goroutines with one phone: ~5.
                 │
                 ▼
          ┌──────────────┐
-         │  DHCP DORA   │  DISCOVER → OFFER → REQUEST → ACK
+         │ DHCP IN-BAND │  relay sends DISCOVER, snoops OFFER/ACK in the stream
          └──────┬───────┘
                 │ IP assigned
                 ▼
@@ -171,7 +171,7 @@ BetterTether uses zerolog with structured output. Default: human-readable text t
 Key log fields:
 ```
 level       — debug/info/warn/error
-component   — usb | rndis | tun | dhcp | relay | daemon
+component   — usb | rndis | tun | relay | daemon
 session_id  — UUID per phone session
 event       — attach | detach | handshake_ok | ip_assigned | relay_error | etc.
 ```
