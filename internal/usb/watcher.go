@@ -2,6 +2,7 @@ package usb
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/google/gousb"
@@ -17,6 +18,9 @@ type Watcher struct {
 	onDetachFn   func()
 	usbCtx       *gousb.Context
 
+	// mu guards activeDeviceHandle, which is written by the polling loop and
+	// cleared by both Stop and the per-device attach goroutine.
+	mu                 sync.Mutex
 	activeDeviceHandle *gousb.Device // Track single device handle for MVP
 }
 
@@ -53,12 +57,38 @@ func (w *Watcher) Start() {
 
 // Stop cleanly stops the USB watcher and releases contexts.
 func (w *Watcher) Stop() {
-	if w.activeDeviceHandle != nil {
-		w.activeDeviceHandle.Close()
-		w.activeDeviceHandle = nil
-	}
+	w.releaseActiveDevice(nil)
 	w.cancel()
 	w.usbCtx.Close()
+}
+
+// hasActiveDevice reports whether a device is currently claimed.
+func (w *Watcher) hasActiveDevice() bool {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.activeDeviceHandle != nil
+}
+
+// setActiveDevice records the claimed device handle.
+func (w *Watcher) setActiveDevice(dev *gousb.Device) {
+	w.mu.Lock()
+	w.activeDeviceHandle = dev
+	w.mu.Unlock()
+}
+
+// releaseActiveDevice closes the claimed handle and clears it, which lets the
+// polling loop look for a new device. Passing nil releases whatever is
+// currently recorded; otherwise the handle is only released if it still
+// matches dev, so a stale goroutine cannot close a newer device.
+func (w *Watcher) releaseActiveDevice(dev *gousb.Device) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	if w.activeDeviceHandle == nil || (dev != nil && w.activeDeviceHandle != dev) {
+		return
+	}
+	w.activeDeviceHandle.Close()
+	w.activeDeviceHandle = nil
 }
 
 // pollLoop continuously looks for the first Android RNDIS device every few seconds.
@@ -73,7 +103,7 @@ func (w *Watcher) pollLoop() {
 		case <-ticker.C:
 			// If we already have a device attached, check if it's still there.
 			// Re-evaluating USB device states on macOS typically requires re-listing to clear ghosts.
-			if w.activeDeviceHandle != nil {
+			if w.hasActiveDevice() {
 				// We can simply continue polling, but an advanced implementation would verify device presence.
 				// For the sake of simplicity, we assume robust handled detach scenarios for now and skip listing.
 				continue
@@ -132,7 +162,7 @@ func (w *Watcher) pollLoop() {
 					continue
 				}
 
-				w.activeDeviceHandle = candidate
+				w.setActiveDevice(candidate)
 				if w.onAttachFn != nil {
 					go func() {
 						w.onAttachFn(deviceWrapper)
@@ -143,11 +173,8 @@ func (w *Watcher) pollLoop() {
 								Msg("Device detached workflow triggered")
 							w.onDetachFn()
 						}
-						// Clean up handles if not already cleaned by Stop()
-						if w.activeDeviceHandle != nil {
-							w.activeDeviceHandle.Close()
-							w.activeDeviceHandle = nil
-						}
+						// Clean up the handle if Stop() has not already done so.
+						w.releaseActiveDevice(candidate)
 					}()
 				}
 			}
