@@ -180,7 +180,10 @@ BetterTether is free and MIT-licensed, and it stays that way. If it saved you a 
 | Network | Address |
 |---|---|
 | Bitcoin — BTC (P2WPKH) | `bc1qd2wsxzp2f5yw88h44peeagg5afmvnuqqm856c7` |
-| Ethereum — ETH / ERC-20 | `0x9Cffa8A44b5DB7273C06454a582E12EbfEC5795D` |
+| Ethereum — ETH and USDC (ERC-20) | `0x9Cffa8A44b5DB7273C06454a582E12EbfEC5795D` |
+| Tether — USDT (TRC-20, TRON) | `TY5hDiB96EZvyuZuBjGgRhJFpNUVLvyoPh` |
+
+USDC is an ERC-20 token, so it shares the same Ethereum address as ETH — send it on the Ethereum network. The USDT address is **TRON (TRC-20)**, not Ethereum: ERC-20 USDT sent to a TRON address cannot be recovered, so check the network in your wallet before confirming.
 
 Copy these from this page rather than from a search result, a DM, or a clipboard you don't remember filling. Donation addresses are a favourite target for impersonation, and the Ethereum address above is shown in its EIP-55 mixed-case form so a mistyped character is detectable.
 
